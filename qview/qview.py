@@ -21,12 +21,12 @@ DEV = False
 ####################
 
 
-class QueueGui(tk.Tk):
+class QView(tk.Tk):
     """
     """
     def __init__(self):
         tk.Tk.__init__(self)
-        self.name = "QueueGui4_DEV" if DEV else "QueueGui4"
+        self.name = "QView_DEV" if DEV else "QView"
         self.dir_root = Path(__file__).absolute().parent.parent
         self.dir_imag = self.dir_root.joinpath('images')
         self.file_tooltips = self.dir_root.joinpath('tooltips.json')
@@ -141,7 +141,7 @@ class QueueGui(tk.Tk):
 
 
 if __name__ == "__main__":
-    app = QueueGui()
+    app = QView()
     print(f"Welcome to {app.name}: New session started")
     app.title(app.name)
     app.resizable(False, False)
