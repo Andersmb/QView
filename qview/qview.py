@@ -12,8 +12,8 @@ from collections import OrderedDict
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 sys.path.append(os.path.dirname(__file__))
 
-from window_login import Login
-from window_home import Home
+from login import Login
+from home import Home
 
 
 ####################
