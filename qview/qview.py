@@ -50,10 +50,10 @@ class QView(tk.Tk):
         self.foreground_color = tk.StringVar()
 
         # Define defaults for user-changable settings
-        self.defaults = {'fontsize_q': 10,
-                         'background_color': '#000000',
-                         'foreground_color': '#ffffff',
-                         'external_viewer': True}
+        self.defaults = {'fontsize_q': 14,
+                         'background_color': '#ffffff',
+                         'foreground_color': '#000000',
+                         'external_viewer': False}
 
         # Load and apply prefs
         self.prefs = self.load_prefs()
