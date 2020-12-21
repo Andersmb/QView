@@ -7,7 +7,7 @@ from threading import Thread
 
 from q import Q
 from job import Job
-from custom_widgets import MyButton, MyLabel
+from custom_widgets import MyButton, MyLabel, MyFrame, MyEntry, MyCheckbutton, MyOptionMenu, COLOR_BG, COLOR_TEXT
 from external_viewer import ExternalViewer
 
 # Define some constants
@@ -20,6 +20,9 @@ class Home(tk.Frame):
         tk.Frame.__init__(self, parent, **kwargs)
         self.parent = parent
         self.inner_pads = dict(padx=0, pady=2)  # Used for spacing widgets
+
+        # Set background color of self
+        self.configure(background=COLOR_BG)
 
         # Set up SSH client
         self.ssh_client, self.sftp_client = self.setup_remote_connection()
@@ -83,20 +86,20 @@ class Home(tk.Frame):
         pads_outer = dict(padx=5, pady=5)
 
         # Define frames for holding widgets
-        self.frame_top = tk.Frame(self)
+        self.frame_top = MyFrame(self, highlight=False)
         self.frame_top.grid(row=0, column=0, sticky=tk.NSEW)
 
-        self.frame_toptools = tk.Frame(self.frame_top, highlightbackground="black", highlightthickness=2)
-        self.frame_visualization = tk.Frame(self.frame_top, highlightbackground="black", highlightthickness=2)
-        self.frame_filters = tk.Frame(self.frame_top, highlightbackground="black", highlightthickness=2)
-        self.frame_status = tk.Frame(self.frame_top, highlightbackground="black", highlightthickness=2)
-        self.frame_cluster = tk.Frame(self.frame_top, highlightbackground="black", highlightthickness=2)
-        self.frame_prefs = tk.Frame(self.frame_top, highlightbackground='black', highlightthickness=2)
-        self.frame_q = tk.Frame(self, width=1000, height=300)
+        self.frame_toptools = MyFrame(self.frame_top)
+        self.frame_visualization = MyFrame(self.frame_top)
+        self.frame_filters = MyFrame(self.frame_top)
+        self.frame_status = MyFrame(self.frame_top)
+        self.frame_cluster = MyFrame(self.frame_top)
+        self.frame_prefs = MyFrame(self.frame_top)
+        self.frame_q = MyFrame(self, '', width=1000, height=300)
         self.frame_q.grid_propagate(False)
         self.frame_q.grid_rowconfigure(0, weight=1)
         self.frame_q.grid_columnconfigure(0, weight=1)
-        self.frame_bottools = tk.Frame(self, highlightbackground='black', highlightthickness=2)
+        self.frame_bottools = MyFrame(self)
 
         # Grid the frames
         self.frame_toptools.grid(row=0, column=0, sticky=tk.NSEW, **pads_outer)
@@ -111,10 +114,10 @@ class Home(tk.Frame):
         # Top tools
         MyLabel(self.frame_toptools, 'label_tools', text="TOOLS").grid(row=0, column=0, columnspan=2, **pads_outer)
         MyButton(self.frame_toptools, 'button_print_q', image=self.parent.images['cow'], width=60, height=60, command=self.print_q).grid(row=1, column=0, columnspan=2, **pads_inner)
-        MyButton(self.frame_toptools, 'button_input', image=self.parent.images['icon_input'], width=30, height=30, command=self.print_inputfile).grid(row=2, column=0, **pads_inner)
-        MyButton(self.frame_toptools, 'button_output', image=self.parent.images['icon_output'], width=30, height=30, command=self.print_outputfile).grid(row=2, column=1, **pads_inner)
-        MyButton(self.frame_toptools, 'button_error', image=self.parent.images['icon_error'], width=30, height=30, command=self.print_errorfile).grid(row=3, column=0, **pads_inner)
-        MyButton(self.frame_toptools, 'button_job', image=self.parent.images['icon_job'], width=30, height=30, command=self.print_jobfile).grid(row=3, column=1, **pads_inner)
+        MyButton(self.frame_toptools, 'button_input', image=self.parent.images['icon_input'], width=30, height=30, command=lambda: self.print_file_contents('inputfile')).grid(row=2, column=0, **pads_inner)
+        MyButton(self.frame_toptools, 'button_output', image=self.parent.images['icon_output'], width=30, height=30, command=lambda: self.print_file_contents('outputfile')).grid(row=2, column=1, **pads_inner)
+        MyButton(self.frame_toptools, 'button_error', image=self.parent.images['icon_error'], width=30, height=30, command=lambda: self.print_file_contents('errorfile')).grid(row=3, column=0, **pads_inner)
+        MyButton(self.frame_toptools, 'button_job', image=self.parent.images['icon_job'], width=30, height=30, command=lambda: self.print_file_contents('jobfile')).grid(row=3, column=1, **pads_inner)
         MyButton(self.frame_toptools, 'button_history', image=self.parent.images['icon_history'], width=30, height=30, command=self.notimplemented).grid(row=4, column=0, pady=2, padx=2)
         MyButton(self.frame_toptools, 'button_cost', image=self.parent.images['icon_cost'], width=30, height=30, command=self.notimplemented).grid(row=4, column=1, **pads_inner)
         MyButton(self.frame_toptools, 'button_cpu', image=self.parent.images['icon_cpu'], width=30, height=30, command=self.notimplemented).grid(row=5, column=0, **pads_inner)
@@ -127,19 +130,19 @@ class Home(tk.Frame):
 
         MyLabel(self.frame_filters, 'label_filters', text="FILTERS").grid(row=0, column=0, columnspan=2, **pads_outer)
         MyLabel(self.frame_filters, 'label_username', text='Username:').grid(row=1, column=0, sticky=tk.W, **pads_inner)
-        self.entry_username = tk.Entry(self.frame_filters, width=10)
+        self.entry_username = MyEntry(self.frame_filters, width=10)
         self.entry_username.grid(row=1, column=1, sticky=tk.W, **pads_inner)
         self.entry_username.insert(0, self.parent.user.get())
 
         MyLabel(self.frame_filters, 'label_jobstatus', text='Job status:').grid(row=2, column=0, sticky=tk.W, **pads_inner)
-        tk.OptionMenu(self.frame_filters, self.job_status, *[self.job_stati[s] for s in self.job_stati]).grid(row=2, column=1, sticky=tk.W, **pads_inner)
+        MyOptionMenu(self.frame_filters, self.job_status, *[self.job_stati[s] for s in self.job_stati]).grid(row=2, column=1, sticky=tk.W, **pads_inner)
         MyLabel(self.frame_filters, 'label_submitdate', text='Submit date:').grid(row=3, column=0, sticky=tk.W, **pads_inner)
         tk.OptionMenu(self.frame_filters, self.parent.job_history_startdate, *self.job_history).grid(row=3, column=1, sticky=tk.W, **pads_inner)
 
         self.label_search = MyLabel(self.frame_filters, 'label_search', text='Search ANY:')
         self.label_search.grid(row=4, column=0, sticky=tk.W, **pads_inner)
         self.label_search.bind('<Button-1>', self.update_search_mode)
-        self.entry_search = tk.Entry(self.frame_filters, width=10)
+        self.entry_search = MyEntry(self.frame_filters, width=10)
         self.entry_search.grid(row=4, column=1, sticky=tk.W, **pads_inner)
 
         MyLabel(self.frame_status, 'label_status', text="STATUS").grid(row=0, column=0, columnspan=2, **pads_outer)
@@ -179,7 +182,7 @@ class Home(tk.Frame):
         MyButton(self.frame_prefs, 'button_increasefont', image=self.parent.images['icon_+'], width=15, height=15, command=self.increase_fontsize).grid(row=1, column=1, **pads_inner)
         MyButton(self.frame_prefs, 'button_decreasefont', image=self.parent.images['icon_-'], width=15, height=15, command=self.decrease_fontsize).grid(row=1, column=2, **pads_inner)
 
-        tk.Checkbutton(self.frame_prefs, text='External viewer', variable=self.parent.open_in_separate_window).grid(row=2, column=0, sticky=tk.W ,**pads_inner)
+        MyCheckbutton(self.frame_prefs, text='External viewer', variable=self.parent.open_in_separate_window).grid(row=2, column=0, sticky=tk.W ,**pads_inner)
 
         MyButton(self.frame_prefs, 'button_savepref', text='Save', command=self.parent.dump_prefs).grid(row=99, column=0, sticky=tk.W, **pads_inner)
 
@@ -193,7 +196,7 @@ class Home(tk.Frame):
                  width=30, height=30).grid(row=0, column=0, sticky=tk.W, **pads_outer)
         MyButton(self.frame_bottools, 'button_toolbox', image=self.parent.images['icon_toolbox'],
                  command=self.notimplemented, width=30, height=30, highlightcolor='black', highlightthickness=1).grid(row=0, column=1, sticky=tk.W, **pads_outer)
-        self.label_tooltip = tk.Label(self.frame_bottools, text=f'ToolTip: {self.tooltip.get()}', bg='#1f4a46', fg='#ffffff')
+        self.label_tooltip = MyLabel(self.frame_bottools, 'idle', text=f'ToolTip: {self.tooltip.get()}', bg='#1f4a46', fg='#ffffff')
         self.label_tooltip.grid(row=0, column=99, **pads_outer)
 
     def increase_fontsize(self):
@@ -295,78 +298,26 @@ class Home(tk.Frame):
         self.tooltip.set(self.parent.tooltips['idle'])
         self.label_tooltip.config(text=f'Tooltip: {self.tooltip.get()}')
 
-    def print_inputfile(self, *args):
+    def print_file_contents(self, id):
+        pid = self.selected.get()
         if self.quser.get() != self.parent.user.get():
-            return messagebox.showerror('Error', "You don't have permission to do this.")
+            return messagebox.showerror('Error', "You do not have permission to read another user's files.")
+        elif pid is None:
+            return messagebox.showerror('Error', 'No PID selected.')
 
-        job = Job(self, self.selected.get())
         try:
-            inputfile = job.find_inputfile()
-            with self.sftp_client.open(str(inputfile)) as f:
+            fname = eval(f'Job(self, pid).find_{id}()')
+            with self.sftp_client.open(fname) as f:
                 content = f.read()
         except:
-            messagebox.showerror('Error', 'Could not open input file')
-
-        if self.parent.open_in_separate_window.get():
-            return ExternalViewer(self, content)
-        else:
-            self.qwin.delete(0.1, tk.END)
-            self.qwin.insert(tk.END, content)
-
-    def print_jobfile(self, *args):
-        if self.quser.get() != self.parent.user.get():
-            return messagebox.showerror('Error', "You don't have permission to do this.")
-
-        job = Job(self, self.selected.get())
-        try:
-            jobfile = job.find_jobfile()
-            with self.sftp_client.open(str(jobfile)) as f:
-                content = f.read()
-        except:
-            messagebox.showerror('Error', 'Could not open job file')
-
-        if self.parent.open_in_separate_window.get():
-            return ExternalViewer(self, content)
-        else:
-            self.qwin.delete(0.1, tk.END)
-            self.qwin.insert(tk.END, content)
-
-    def print_errorfile(self, *args):
-        if self.quser.get() != self.parent.user.get():
-            return messagebox.showerror('Error', "You don't have permission to do this.")
-
-        job = Job(self, self.selected.get())
-        try:
-            errorfile = job.find_errorfile()
-            with self.sftp_client.open(str(errorfile)) as f:
-                content = f.read()
-        except:
-            messagebox.showerror('Error', 'Could not open error file')
-
-        if self.parent.open_in_separate_window.get():
-            return ExternalViewer(self, content)
-        else:
-            self.qwin.delete(0.1, tk.END)
-            self.qwin.insert(tk.END, content)
-
-    def print_outputfile(self, *args):
-        if self.quser.get() != self.parent.user.get():
-            return messagebox.showerror('Error', "You don't have permission to do this.")
-
-        job = Job(self, self.selected.get())
-        try:
-            outputfile = job.find_outputfile()
-            with self.sftp_client.open(str(outputfile)) as f:
-                content = f.read()
-        except:
-            return messagebox.showerror('Error', 'Could not open output file')
+            return messagebox.showerror('Error', f'Could not open file of type={id}')
 
         if self.parent.open_in_separate_window.get():
             return ExternalViewer(self, content, skip_to_end=True)
         else:
             self.qwin.delete(0.1, tk.END)
             self.qwin.insert(tk.END, content)
-            self.qwin.see("end")
+            self.qwin.see(tk.END)
 
     def setup_remote_connection(self):
         hostname = self.parent.hostnames[self.parent.cluster.get()]

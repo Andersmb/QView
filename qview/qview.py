@@ -11,14 +11,19 @@ from PIL import Image, ImageTk
 from collections import OrderedDict
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 sys.path.append(os.path.dirname(__file__))
+sys.path.append(__file__)
 
 from login import Login
 from home import Home
+from custom_widgets import COLOR_BG
 
 
 ####################
 DEV = False
 ####################
+
+COLOR_BG = '#2e2d2b'
+COLOR_TEXT = '#ffffff'
 
 
 class QView(tk.Tk):
@@ -32,6 +37,7 @@ class QView(tk.Tk):
         self.file_tooltips = self.dir_root.joinpath('tooltips.json')
         self.file_prefs = self.dir_root.joinpath('preferences.json')
         self.tmpdir = Path(tempfile.mkdtemp())
+        self.configure(background=COLOR_BG)
 
         # Initialize tk variables
         self.startup = tk.BooleanVar()
