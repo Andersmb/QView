@@ -1,14 +1,15 @@
-import tkinter as tk
-from tkinter import messagebox
-from datetime import datetime as dt, timedelta
 import time
-import paramiko as pmk
+import tkinter as tk
+from datetime import datetime as dt, timedelta
 from threading import Thread
+from tkinter import messagebox, colorchooser
+import re
 
-from q import Q
-from job import Job
-from custom_widgets import MyButton, MyLabel, MyFrame, MyEntry, MyCheckbutton, MyOptionMenu, COLOR_BG, COLOR_TEXT
+import paramiko as pmk
+from custom_widgets import MyButton, MyLabel, MyFrame, MyEntry, MyCheckbutton, MyOptionMenu
 from external_viewer import ExternalViewer
+from job import Job
+from q import Q
 
 # Define some constants
 CONST_HISTORY_LENGTH = 28  # How long back to look at job history
@@ -21,9 +22,6 @@ class Home(tk.Frame):
         self.parent = parent
         self.inner_pads = dict(padx=0, pady=2)  # Used for spacing widgets
 
-        # Set background color of self
-        self.configure(background=COLOR_BG)
-
         # Set up SSH client
         self.ssh_client, self.sftp_client = self.setup_remote_connection()
 
@@ -31,24 +29,17 @@ class Home(tk.Frame):
         self.ssh_isalive = tk.BooleanVar()
 
         # Define some tkinter vars
-        self.selected = tk.StringVar()  # For monitoring the selected text
-        self.selected.set('No job selected')
-        self.running_jobs = tk.IntVar()  # For monitoring the number of running jobs
-        self.running_jobs.set(0)
-        self.pending_jobs = tk.IntVar()  # For monitoring the number of pending jobs
-        self.pending_jobs.set(0)
-        self.quser = tk.StringVar()
-        self.quser.set(self.parent.user.get())
+        self.selected = tk.StringVar(); self.selected.set('No job selected')
+        self.running_jobs = tk.IntVar(); self.running_jobs.set(0)
+        self.pending_jobs = tk.IntVar(); self.pending_jobs.set(0)
+        self.quser = tk.StringVar(); self.quser.set(self.parent.user.get())
+        self.monitor_hostname = tk.StringVar(); self.monitor_hostname.set(self.parent.hostnames[self.parent.cluster.get()])
+        self.search_all = tk.BooleanVar(); self.search_all.set(0)
+        self.tooltip = tk.StringVar(); self.tooltip.set(self.parent.tooltips['idle'])
+        self.timestamp = tk.StringVar()
         self.thread_ssh_alive = tk.BooleanVar()
         self.thread_job_alive = tk.BooleanVar()
         self.thread_sel_alive = tk.BooleanVar()
-        self.monitor_hostname = tk.StringVar()  # For displaying current hostname in status panel
-        self.monitor_hostname.set(self.parent.hostnames[self.parent.cluster.get()])
-        self.search_all = tk.BooleanVar()
-        self.search_all.set(0)
-        self.tooltip = tk.StringVar()
-        self.tooltip.set(self.parent.tooltips['idle'])
-        self.timestamp = tk.StringVar()
 
         # Define the job history length and set default to today
         self.job_history = [dt.today().date() - timedelta(days=i) for i in range(CONST_HISTORY_LENGTH)]
@@ -59,8 +50,9 @@ class Home(tk.Frame):
         self.job_stati = {'A': 'All jobs', 'R': 'Running', 'PD': 'Pending', 'CD': 'Completed', 'TO': 'Timeout'}
         self.job_status.set(self.job_stati['A'])
 
-        # Create the widgets
+        # Create the widgets and set color
         self.create_widgets()
+        self.set_color()
 
         # Start threads for background monitoring
         self.thread_jobs = Thread(target=self.monitor_running_pending_jobs, daemon=True)
@@ -178,13 +170,23 @@ class Home(tk.Frame):
                      relief=relief).grid(row=row+1, column=col, **pads_inner)
 
         MyLabel(self.frame_prefs, 'label_preferences', text="PREFERENCES").grid(row=0, column=0, columnspan=3, **pads_outer)
-        MyLabel(self.frame_prefs, 'label_fontsize', text='Queue fontsize:').grid(row=1, column=0, **pads_inner)
-        MyButton(self.frame_prefs, 'button_increasefont', image=self.parent.images['icon_+'], width=15, height=15, command=self.increase_fontsize).grid(row=1, column=1, **pads_inner)
-        MyButton(self.frame_prefs, 'button_decreasefont', image=self.parent.images['icon_-'], width=15, height=15, command=self.decrease_fontsize).grid(row=1, column=2, **pads_inner)
-
+        MyLabel(self.frame_prefs, 'label_fontsize', text='Queue fontsize:').grid(row=1, column=0, sticky=tk.W, **pads_inner)
+        MyButton(self.frame_prefs, 'button_increasefont', image=self.parent.images['icon_+'], width=15, height=15, command=self.increase_fontsize).grid(row=1, column=1, sticky=tk.W, **pads_inner)
+        MyButton(self.frame_prefs, 'button_decreasefont', image=self.parent.images['icon_-'], width=15, height=15, command=self.decrease_fontsize).grid(row=1, column=2, sticky=tk.W, **pads_inner)
         MyCheckbutton(self.frame_prefs, text='External viewer', variable=self.parent.open_in_separate_window).grid(row=2, column=0, sticky=tk.W ,**pads_inner)
+        MyLabel(self.frame_prefs, 'label_backgroundcolor', text='Backg. color:').grid(row=3, column=0, sticky=tk.W, **pads_inner)
+        self.entry_background_color = MyEntry(self.frame_prefs, width=6)
+        self.entry_background_color.grid(row=3, column=1, sticky=tk.W, **pads_inner)
+        self.entry_background_color.insert(tk.END, self.parent.background_color.get())
+        MyButton(self.frame_prefs, 'button_colorpicker_bg', image=self.parent.images['icon_colorpicker'], width=20, height=20, command=lambda: self.colorpicker(where='bg')).grid(row=3, column=2, **pads_inner)
 
-        MyButton(self.frame_prefs, 'button_savepref', text='Save', command=self.parent.dump_prefs).grid(row=99, column=0, sticky=tk.W, **pads_inner)
+        MyLabel(self.frame_prefs, 'label_foregroundcolor', text='Foreg. color:').grid(row=4, column=0, sticky=tk.W, **pads_inner)
+        self.entry_foreground_color = MyEntry(self.frame_prefs, width=6)
+        self.entry_foreground_color.grid(row=4, column=1, sticky=tk.W, **pads_inner)
+        self.entry_foreground_color.insert(tk.END, self.parent.foreground_color.get())
+        MyButton(self.frame_prefs, 'button_colorpicker_fg', image=self.parent.images['icon_colorpicker'], width=20, height=20, command=lambda: self.colorpicker(where='fg')).grid(row=4, column=2, **pads_inner)
+
+        MyButton(self.frame_prefs, 'button_savepref', image=self.parent.images['icon_applysettings'], width=75, height=30, command=self.parent.dump_prefs).grid(row=99, column=0, sticky=tk.W, **pads_inner)
 
         # Main queue Text widget
         self.qwin = tk.Text(self.frame_q, wrap=tk.NONE, bg='black', fg='white', relief=tk.SUNKEN)
@@ -199,12 +201,61 @@ class Home(tk.Frame):
         self.label_tooltip = MyLabel(self.frame_bottools, 'idle', text=f'ToolTip: {self.tooltip.get()}', bg='#1f4a46', fg='#ffffff')
         self.label_tooltip.grid(row=0, column=99, **pads_outer)
 
+    def colorpicker(self, where):
+        rgb, hex = colorchooser.askcolor(parent=self, initialcolor=self.parent.defaults['background_color'])
+        if where == 'bg':
+            self.entry_background_color.delete(0, tk.END)
+            self.entry_background_color.insert(0, hex)
+        elif where == 'fg':
+            self.entry_foreground_color.delete(0, tk.END)
+            self.entry_foreground_color.insert(0, hex)
+
+        self.set_color()
+
+    def set_color(self, *args):
+        bg = self.entry_background_color.get().lower()
+        fg = self.entry_foreground_color.get().lower()
+        if not all([re.match(r'^#(?:[0-9a-f]{3}){1,2}$', col) for col in [bg, fg]]):
+            return messagebox.showerror('Error', 'Invalid Hex color code')
+
+        self.parent.background_color.set(bg)
+        self.parent.foreground_color.set(fg)
+
+        frames, widgets = self.gather_children(self.winfo_children())
+        frames.append(self)
+        for widget in widgets:
+            widget.configure(background=bg)
+            widget.configure(foreground=fg)
+
+            if isinstance(widget, tk.Entry):
+                widget.configure(insertbackground=fg)
+            elif isinstance(widget, tk.OptionMenu):
+                widget['menu'].config(fg='black')
+                widget.configure(fg='black')
+
+        for frame in frames:
+            frame.configure(background=self.parent.background_color.get())
+
+    def gather_children(self, widgets, frames=[], children=[]):
+        if not widgets:
+            return frames, children
+        widget = widgets.pop()
+        if isinstance(widget, tk.Frame):
+            frames.append(widget)
+            for child in widget.winfo_children():
+                widgets.append(child)
+            return self.gather_children(widgets, frames=frames, children=children)
+        else:
+            if not isinstance(widget, tk.Text):
+                children.append(widget)
+            return self.gather_children(widgets, frames=frames, children=children)
+
     def increase_fontsize(self):
-        s = self.parent.font_q.actual()['size'] + 2
+        s = self.parent.font_q.actual()['size'] + 1
         self.parent.font_q.configure(size=s)
 
     def decrease_fontsize(self):
-        s = self.parent.font_q.actual()['size'] - 2
+        s = self.parent.font_q.actual()['size'] - 1
         self.parent.font_q.configure(size=max(s, 3))
 
     def notimplemented(self):
@@ -337,6 +388,7 @@ class Home(tk.Frame):
         self.parent.bind('<Control-plus>', lambda event: self.increase_fontsize())
         self.parent.bind('<Control-minus>', lambda event: self.decrease_fontsize())
         self.entry_username.bind('<Return>', self.print_q)
+        self.entry_background_color.bind('<Return>', self.set_color)
 
     def configure_tags(self):
         tag_colors = {

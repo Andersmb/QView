@@ -15,7 +15,6 @@ sys.path.append(__file__)
 
 from login import Login
 from home import Home
-from custom_widgets import COLOR_BG
 
 
 ####################
@@ -47,9 +46,14 @@ class QView(tk.Tk):
         self.job_history_startdate = tk.StringVar()
         self.queue_format = tk.StringVar()
         self.open_in_separate_window = tk.BooleanVar()
+        self.background_color = tk.StringVar()
+        self.foreground_color = tk.StringVar()
 
         # Define defaults for user-changable settings
-        self.defaults = {'fontsize_q': 10}
+        self.defaults = {'fontsize_q': 10,
+                         'background_color': '#000000',
+                         'foreground_color': '#ffffff',
+                         'external_viewer': True}
 
         # Load and apply prefs
         self.prefs = self.load_prefs()
@@ -92,7 +96,9 @@ class QView(tk.Tk):
                        'icon_skull': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_skull.png'))),
                        'icon_toolbox': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_toolbox.png'))),
                        'icon_+': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_+.png'))),
-                       'icon_-': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_-.png')))}
+                       'icon_-': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_-.png'))),
+                       'icon_colorpicker': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_colorpicker.png'))),
+                       'icon_applysettings': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_applysettings.png')))}
 
         # Load file containing tooltip messages
         self.tooltips = self.load_tooltips()
@@ -127,17 +133,21 @@ class QView(tk.Tk):
     def get_current_prefs(self):
         return {
             'fontsize_q': self.font_q.actual()['size'],
-            'external_viewer': self.open_in_separate_window.get()
+            'external_vivi .git ewer': self.open_in_separate_window.get(),
+            'background_color': self.background_color.get(),
+            'foreground_color': self.foreground_color.get()
         }
 
     def set_current_prefs(self):
         self.open_in_separate_window.set(self.prefs['external_viewer'])
+        self.background_color.set(self.prefs['background_color'])
+        self.foreground_color.set(self.prefs['foreground_color'])
 
     def load_prefs(self):
         try:
             with open(self.file_prefs) as f:
                 return json.load(f)
-        except FileNotFoundError:
+        except:
             return self.defaults
 
     def dump_prefs(self):

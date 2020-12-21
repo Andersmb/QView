@@ -1,10 +1,6 @@
 import tkinter as tk
 
 
-COLOR_BG = '#c4b68f'
-COLOR_TEXT = '#111111'
-
-
 class ToolTipFunctionality:
     def __init__(self, wid):
         self.wid = wid
@@ -34,21 +30,21 @@ class MyButton(tk.Button, ToolTipFunctionality):
         tk.Button.__init__(self, parent, **kwargs)
         ToolTipFunctionality.__init__(self, wid)
 
-        self.configure(background=COLOR_BG, borderwidth=0, highlightthickness=1)
+        self.configure(borderwidth=0, highlightthickness=1)
 
 
 class MyLabel(tk.Label, ToolTipFunctionality):
     def __init__(self, parent, wid, **kwargs):
         tk.Label.__init__(self, parent, **kwargs)
         ToolTipFunctionality.__init__(self, wid)
-        self.configure(background=COLOR_BG, foreground=COLOR_TEXT, borderwidth=0, highlightthickness=0)
+        self.configure(borderwidth=0, highlightthickness=0)
 
 
 class MyFrame(tk.Frame):
     def __init__(self, parent, highlight=True, **kwargs):
         tk.Frame.__init__(self, parent, **kwargs)
         self.parent = parent
-        self.configure(background=COLOR_BG, borderwidth=1 if highlight else 0, relief=tk.GROOVE)
+        self.configure(borderwidth=1 if highlight else 0, relief=tk.GROOVE)
 
         if highlight:
             self.bind('<Enter>', self.on_enter)
@@ -64,23 +60,22 @@ class MyFrame(tk.Frame):
 class MyOptionMenu(tk.OptionMenu):
     def __init__(self, *args, **kwargs):
         tk.OptionMenu.__init__(self, *args, **kwargs)
-        self.configure(background=COLOR_BG)
-        self['menu'].config(background=COLOR_BG, borderwidth=0)
+        self['menu'].config(borderwidth=0)
 
 
 class MyCheckbutton(tk.Checkbutton):
     def __init__(self, parent, **kwargs):
         tk.Checkbutton.__init__(self, parent, **kwargs)
-        self.configure(background=COLOR_BG, foreground=COLOR_TEXT, borderwidth=0, highlightthickness=0)
+        self.configure(borderwidth=0, highlightthickness=0)
 
 
 class MyEntry(tk.Entry):
     def __init__(self, parent, **kwargs):
         tk.Entry.__init__(self, parent, **kwargs)
-        self.configure(background=COLOR_BG, foreground=COLOR_TEXT, borderwidth=1, highlightthickness=0, insertbackground=COLOR_TEXT)
+        self.configure(borderwidth=1, highlightthickness=0)
 
 
 class MyText(tk.Text):
     def __init__(self, parent, **kwargs):
         tk.Text.__init__(self, parent, **kwargs)
-        self.configure(highlightthickness=0, borderwidth=1, relief=tk.SUNKEN, selectbackground=COLOR_BG)
+        self.configure(highlightthickness=0, borderwidth=1, relief=tk.SUNKEN)
