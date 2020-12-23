@@ -1,20 +1,18 @@
 import tkinter as tk
+from custom_widgets import QueueViewer
 
 
 class ExternalViewer(tk.Toplevel):
-    def __init__(self, parent, content, skip_to_end=False):
-        tk.Toplevel.__init__(self)
+    def __init__(self, parent, queue, pid, ftype):
+        tk.Toplevel.__init__(self, parent)
         self.parent = parent
-        self.master = self.parent.parent
-        self.content = content
-        self.skip_to_end = skip_to_end
+        self.queue = queue
+        self.pid = pid
+        self.ftype = ftype
 
         self.frame = tk.Frame(self)
         self.frame.pack(fill=tk.BOTH, expand=True)
 
-        self.viewer = tk.Text(self.frame, height=self.master.winfo_screenheight())
+        self.viewer = QueueViewer(self.frame)
         self.viewer.pack(fill=tk.BOTH, expand=True)
-        self.viewer.insert(tk.END, content)
-
-        if self.skip_to_end:
-            self.viewer.see(tk.END)
+        self.viewer.display_file(self.queue, self.pid, self.ftype)

@@ -37,6 +37,6 @@
   "label_fontsize": "Change the fontsize for queue window",
   "button_increasefont": "Increase font size by 2",
   "button_decreasefont": "Decrease font size by 2",
-  "button_savepref": "Store current settings, auto loads next startup",
+  "button_savepref": "Save current settings to file, auto loads on next startup",
   "button_colorpicker": "Select background color (excluding queue window)"
 }

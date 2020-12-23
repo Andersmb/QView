@@ -133,7 +133,7 @@ class QView(tk.Tk):
     def get_current_prefs(self):
         return {
             'fontsize_q': self.font_q.actual()['size'],
-            'external_vivi .git ewer': self.open_in_separate_window.get(),
+            'external_viewer': self.open_in_separate_window.get(),
             'background_color': self.background_color.get(),
             'foreground_color': self.foreground_color.get()
         }
