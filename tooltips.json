@@ -37,7 +37,12 @@
   "label_fontsize": "Change the fontsize for queue window",
   "button_increasefont": "Increase font size by 2",
   "button_decreasefont": "Decrease font size by 2",
+<<<<<<< HEAD
   "button_savepref": "Store current settings, auto loads next startup",
   "button_colorpicker": "Select background color (excluding queue window)",
   "label_externalviewer": "Open filecontents in a separate window"
+=======
+  "button_savepref": "Save current settings to file, auto loads on next startup",
+  "button_colorpicker": "Select background color (excluding queue window)"
+>>>>>>> qpandas
 }

@@ -6,10 +6,11 @@ from tkinter import messagebox, colorchooser
 import re
 
 import paramiko as pmk
-from custom_widgets import MyButton, MyLabel, MyFrame, MyEntry, MyCheckbutton, MyOptionMenu
+from custom_widgets import MyButton, MyLabel, MyFrame, MyEntry, MyCheckbutton, MyOptionMenu, QueueViewer
 from external_viewer import ExternalViewer
-from job import Job
-from q import Q
+from queue import Queue
+from helpers import from_val
+from exceptions import *
 
 # Define some constants
 CONST_HISTORY_LENGTH = 28  # How long back to look at job history
@@ -29,7 +30,7 @@ class Home(tk.Frame):
         self.ssh_isalive = tk.BooleanVar()
 
         # Define some tkinter vars
-        self.selected = tk.StringVar(); self.selected.set('No job selected')
+        self.selected = tk.StringVar(); self.selected.set('')
         self.running_jobs = tk.IntVar(); self.running_jobs.set(0)
         self.pending_jobs = tk.IntVar(); self.pending_jobs.set(0)
         self.quser = tk.StringVar(); self.quser.set(self.parent.user.get())
@@ -46,9 +47,9 @@ class Home(tk.Frame):
         self.parent.job_history_startdate.set(str(dt.today().date()))
 
         # Define the job status variables and set default to all jobs
-        self.job_status = tk.StringVar()
-        self.job_stati = {'A': 'All jobs', 'R': 'Running', 'PD': 'Pending', 'CD': 'Completed', 'TO': 'Timeout'}
-        self.job_status.set(self.job_stati['A'])
+        self.filter_job_status = tk.StringVar()
+        self.job_stati = {'ALL': 'All jobs', 'RUNNING': 'Running', 'PENDING': 'Pending', 'COMPLETED': 'Completed', 'TIMEOUT': 'Timeout'}
+        self.filter_job_status.set(self.job_stati['ALL'])
 
         # Create the widgets and set color
         self.create_widgets()
@@ -66,10 +67,6 @@ class Home(tk.Frame):
         # Bind events to Home
         self.bind_events()
 
-        # Configure queue window tags for color syntax
-        self.configure_tags()
-
-        # Print the queue
         self.print_q()
 
     def create_widgets(self):
@@ -106,10 +103,10 @@ class Home(tk.Frame):
         # Top tools
         MyLabel(self.frame_toptools, 'label_tools', text="TOOLS").grid(row=0, column=0, columnspan=2, **pads_outer)
         MyButton(self.frame_toptools, 'button_print_q', image=self.parent.images['cow'], width=60, height=60, command=self.print_q).grid(row=1, column=0, columnspan=2, **pads_inner)
-        MyButton(self.frame_toptools, 'button_input', image=self.parent.images['icon_input'], width=30, height=30, command=lambda: self.print_file_contents('inputfile')).grid(row=2, column=0, **pads_inner)
-        MyButton(self.frame_toptools, 'button_output', image=self.parent.images['icon_output'], width=30, height=30, command=lambda: self.print_file_contents('outputfile')).grid(row=2, column=1, **pads_inner)
-        MyButton(self.frame_toptools, 'button_error', image=self.parent.images['icon_error'], width=30, height=30, command=lambda: self.print_file_contents('errorfile')).grid(row=3, column=0, **pads_inner)
-        MyButton(self.frame_toptools, 'button_job', image=self.parent.images['icon_job'], width=30, height=30, command=lambda: self.print_file_contents('jobfile')).grid(row=3, column=1, **pads_inner)
+        MyButton(self.frame_toptools, 'button_input', image=self.parent.images['icon_input'], width=30, height=30, command=lambda: self.print_file_contents('input')).grid(row=2, column=0, **pads_inner)
+        MyButton(self.frame_toptools, 'button_output', image=self.parent.images['icon_output'], width=30, height=30, command=lambda: self.print_file_contents('output')).grid(row=2, column=1, **pads_inner)
+        MyButton(self.frame_toptools, 'button_error', image=self.parent.images['icon_error'], width=30, height=30, command=lambda: self.print_file_contents('error')).grid(row=3, column=0, **pads_inner)
+        MyButton(self.frame_toptools, 'button_job', image=self.parent.images['icon_job'], width=30, height=30, command=lambda: self.print_file_contents('job')).grid(row=3, column=1, **pads_inner)
         MyButton(self.frame_toptools, 'button_history', image=self.parent.images['icon_history'], width=30, height=30, command=self.notimplemented).grid(row=4, column=0, pady=2, padx=2)
         MyButton(self.frame_toptools, 'button_cost', image=self.parent.images['icon_cost'], width=30, height=30, command=self.notimplemented).grid(row=4, column=1, **pads_inner)
         MyButton(self.frame_toptools, 'button_cpu', image=self.parent.images['icon_cpu'], width=30, height=30, command=self.notimplemented).grid(row=5, column=0, **pads_inner)
@@ -127,7 +124,7 @@ class Home(tk.Frame):
         self.entry_username.insert(0, self.parent.user.get())
 
         MyLabel(self.frame_filters, 'label_jobstatus', text='Job status:').grid(row=2, column=0, sticky=tk.W, **pads_inner)
-        MyOptionMenu(self.frame_filters, self.job_status, *[self.job_stati[s] for s in self.job_stati]).grid(row=2, column=1, sticky=tk.W, **pads_inner)
+        MyOptionMenu(self.frame_filters, self.filter_job_status, *[val for key, val in self.job_stati.items()]).grid(row=2, column=1, sticky=tk.W, **pads_inner)
         MyLabel(self.frame_filters, 'label_submitdate', text='Submit date:').grid(row=3, column=0, sticky=tk.W, **pads_inner)
         tk.OptionMenu(self.frame_filters, self.parent.job_history_startdate, *self.job_history).grid(row=3, column=1, sticky=tk.W, **pads_inner)
 
@@ -186,13 +183,14 @@ class Home(tk.Frame):
         self.entry_foreground_color.grid(row=4, column=1, sticky=tk.W, **pads_inner)
         self.entry_foreground_color.insert(tk.END, self.parent.foreground_color.get())
         MyButton(self.frame_prefs, 'button_colorpicker_fg', image=self.parent.images['icon_colorpicker'], width=20, height=20, command=lambda: self.colorpicker(where='fg')).grid(row=4, column=2, **pads_inner)
+        MyButton(self.frame_prefs, 'button_qheaders', text='Select queue headers', command=self.get_q_headers).grid(row=5, column=1, **pads_inner)
 
         MyButton(self.frame_prefs, 'button_savepref', image=self.parent.images['icon_applysettings'], width=75, height=30, command=self.parent.dump_prefs).grid(row=99, column=0, sticky=tk.W, **pads_inner)
 
         # Main queue Text widget
-        self.qwin = tk.Text(self.frame_q, wrap=tk.NONE, bg='black', fg='white', relief=tk.SUNKEN)
-        self.qwin.grid(row=0, column=0, sticky=tk.NSEW)
-        self.qwin.configure(font=self.parent.font_q)
+        self.qv = QueueViewer(self.frame_q)
+        self.qv.grid(row=0, column=0, sticky=tk.NSEW)
+        self.qv.configure(font=self.parent.font_q)
 
         # Bottom tools
         MyButton(self.frame_bottools, 'button_quit', image=self.parent.images['icon_skull'], command=self.quit,
@@ -201,6 +199,9 @@ class Home(tk.Frame):
                  command=self.notimplemented, width=30, height=30, highlightcolor='black', highlightthickness=1).grid(row=0, column=1, sticky=tk.W, **pads_outer)
         self.label_tooltip = MyLabel(self.frame_bottools, 'idle', text=f'ToolTip: {self.tooltip.get()}', bg='#1f4a46', fg='#ffffff')
         self.label_tooltip.grid(row=0, column=99, **pads_outer)
+
+    def get_q_headers(self):
+        pass
 
     def colorpicker(self, where):
         rgb, hex = colorchooser.askcolor(parent=self, initialcolor=self.parent.defaults['background_color'])
@@ -286,16 +287,15 @@ class Home(tk.Frame):
             self.set_search_all()
 
     def print_q(self, *args):
-        self.qwin.delete('1.0', tk.END)
-        self.quser.set(self.entry_username.get().strip())
+        self.quser.set(self.entry_username.get())
+        fields = ['jobid', 'name', 'partition', 'qos', 'timeleft', 'timelimit', 'submittime']
 
-        q = Q(parent=self, user=self.quser.get()).fetch()
+        state_val = self.filter_job_status.get()
+        state_key = from_val(self.job_stati, state_val).strip()
 
-        for i, line in enumerate(q):
-            jobstate = line.split()[3].lower()
-            self.qwin.insert(tk.END, line+'\n')
-            self.qwin.tag_add(jobstate, f"{i+1}.0", f"{i+1}.{tk.END}")
-            i += 1
+        self.qv.display_queue(Queue(self.quser.get(), self.ssh_client),
+                              fields,
+                              state_key)
 
     def execute_remote(self, cmd):
         stdin, stdout, stderr = self.ssh_client.exec_command(cmd)
@@ -305,9 +305,14 @@ class Home(tk.Frame):
 
     def monitor_running_pending_jobs(self):
         while True:
-            nr, np = Q(parent=self, user=self.parent.user.get()).count_run_pend()
-            self.running_jobs.set(nr)
-            self.pending_jobs.set(np)
+            queue = Queue(self.parent.user.get(), self.ssh_client)
+            if queue.q.empty:
+                return 0, 0
+
+            nrun = len(queue.q.loc[queue.q.state == 'RUNNING'].index)
+            npen = len(queue.q.loc[queue.q.state == 'PENDING'].index)
+            self.running_jobs.set(nrun)
+            self.pending_jobs.set(npen)
             self.thread_job_alive.set(self.thread_jobs.is_alive())
             time.sleep(CONST_MONITOR_IDLE_TIME)
 
@@ -322,13 +327,29 @@ class Home(tk.Frame):
     def monitor_output_last_update(self):
         while True:
             pid = self.selected.get()
-            timestamp = Job(self, pid).get_timestamp()
+            queue = Queue(self.parent.user.get(), ssh_client=self.ssh_client, sftp_client=self.sftp_client)
+            job = queue.get_job(pid)
+            timestamp = None
+
+            if not job.empty:
+                fname = str(job.outputfile.item())
+                try:
+                    self.sftp_client.stat(fname)
+                    stdout = self.execute_remote(f'ls -ltr {fname}')
+                    timestamp = " ".join(stdout.split()[5:8])
+                except FileNotFoundError:
+                    timestamp = 'File not found'
+                except AmbiguousJobError:
+                    timestamp = 'Ambiguous PID'
+                except NotMatchedError:
+                    timestamp = None
+
             self.timestamp.set(timestamp)
             time.sleep(CONST_MONITOR_IDLE_TIME*4)
 
     def select_text(self):
         try:
-            s = int(self.qwin.get(tk.SEL_FIRST, tk.SEL_LAST))
+            s = int(self.qv.get(tk.SEL_FIRST, tk.SEL_LAST))
             return s
         except:
             return ''
@@ -350,26 +371,19 @@ class Home(tk.Frame):
         self.tooltip.set(self.parent.tooltips['idle'])
         self.label_tooltip.config(text=f'Tooltip: {self.tooltip.get()}')
 
-    def print_file_contents(self, id):
+    def print_file_contents(self, ftype):
         pid = self.selected.get()
         if self.quser.get() != self.parent.user.get():
             return messagebox.showerror('Error', "You do not have permission to read another user's files.")
-        elif pid is None:
+        elif not pid:
             return messagebox.showerror('Error', 'No PID selected.')
 
-        try:
-            fname = eval(f'Job(self, pid).find_{id}()')
-            with self.sftp_client.open(fname) as f:
-                content = f.read()
-        except:
-            return messagebox.showerror('Error', f'Could not open file of type={id}')
+        queue = Queue(self.quser.get(), ssh_client=self.ssh_client, sftp_client=self.sftp_client)
 
         if self.parent.open_in_separate_window.get():
-            return ExternalViewer(self, content, skip_to_end=True)
+            ExternalViewer(self, queue, pid, ftype)
         else:
-            self.qwin.delete(0.1, tk.END)
-            self.qwin.insert(tk.END, content)
-            self.qwin.see(tk.END)
+            self.qv.display_file(queue, pid, ftype)
 
     def setup_remote_connection(self):
         hostname = self.parent.hostnames[self.parent.cluster.get()]
@@ -390,15 +404,3 @@ class Home(tk.Frame):
         self.parent.bind('<Control-minus>', lambda event: self.decrease_fontsize())
         self.entry_username.bind('<Return>', self.print_q)
         self.entry_background_color.bind('<Return>', self.set_color)
-
-    def configure_tags(self):
-        tag_colors = {
-            'completed': '#717feb',
-            'running': '#51c280',
-            'pending': '#deb23a',
-            'cancelled': '#d966d9',
-            'timeout': '#de5f74'
-        }
-        for status, color in tag_colors.items():
-            self.qwin.tag_configure(status, foreground=color)
-        self.qwin.tag_raise(tk.SEL)

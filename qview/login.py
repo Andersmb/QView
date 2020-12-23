@@ -41,6 +41,8 @@ class Login(tk.Frame):
 
             except pmk.ssh_exception.AuthenticationException:
                 messagebox.showerror(self.parent.name, 'Incorrect username or password. Please try again')
+            except pmk.ssh_exception.SSHException:
+                pass
 
         else:
             try:
