@@ -3,27 +3,34 @@ from collections import OrderedDict
 from pathlib import Path
 from exceptions import *
 
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', None)
+pd.set_option('display.max_columns', None)
+pd.set_option('display.width', None)
+pd.set_option('display.max_colwidth', None)
 
 class Queue:
-    def __init__(self, user, ssh_client, sftp_client=None, ext_input='.inp', ext_output='.out'):
+    def __init__(self, ssh_client=None, sftp_client=None, user=None, filters={'state': 'ALL'}, ext_input='.inp', ext_output='.out'):
         self.ssh_client = ssh_client
         self.sftp_client = sftp_client
-        self.user = user
         self.ext_input = ext_input
         self.ext_output = ext_output
+        self.user = user
+        self.filters = filters
         self.scratch = '/cluster/work/jobs'
 
-        self.field_width = 400
-        self.fields = ['jobid', 'name', 'username', 'state', 'timeleft', 'submittime', 'timelimit', 'command',
+        self.field_width = 100
+        self.fields = set(['jobid', 'name', 'username', 'state', 'submittime', 'timelimit', 'command',
                        'endtime', 'minmemory', 'mintime', 'nice', 'nodelist', 'numcpus', 'numnodes', 'numtasks',
-                       'partition', 'priority', 'qos', 'state', 'starttime', 'stdin', 'stdout', 'stderr', 'submittime',
-                       'timeleft', 'timeused', 'timelimit', 'userid', 'workdir']
+                       'partition', 'priority', 'qos', 'starttime', 'stdin', 'stdout', 'stderr',
+                       'timeleft', 'timeused', 'userid', 'workdir'])
 
-        self.q = self.parse()
-
-    def parse(self):
+    def fetch(self):
         fmt = [el+f':.{self.field_width}' for el in self.fields]
-        cmd = f'squeue --noheader -u {self.user} -O {",".join(fmt)}'
+        if self.user == '' or self.user == 'all':
+            cmd = f'squeue --noheader -O {",".join(fmt)}'
+        else:
+            cmd = f'squeue --noheader -u {self.user} -O {",".join(fmt)}'
         stdin, stdout, stderr = self.ssh_client.exec_command(cmd)
         raw = stdout.readlines()
         if not raw:
@@ -33,6 +40,7 @@ class Queue:
         stop = [(i+1)*self.field_width for i in range(len(self.fields))]
 
         q = []
+        print("Number of lines", len(raw))
         for job in raw:
             d = OrderedDict({})
             for s, e, key in zip(start, stop, self.fields):
@@ -43,16 +51,24 @@ class Queue:
 
             q.append(d)
 
-        return pd.DataFrame.from_dict(q)
+        queue = pd.DataFrame.from_dict(q)
+        state = self.filters['state']
+        if state == 'ALL':
+            return queue
+        else:
+            try:
+                return queue.loc[queue.state == state]
+            except:
+                return queue
 
-    def get_job(self, pid):
-        job = self.q.loc[self.q.jobid == pid]
+    def get_job(self, queue, pid):
+        job = queue.loc[queue.jobid == pid]
         if len(job.index) > 1:
-            raise AmbiguousJobError('PID macthed more than one job')
-        return self.q.loc[self.q.jobid == pid]
+            raise AmbiguousJobError('PID matched more than one job')
+        return queue.loc[queue.jobid == pid]
 
-    def get_file_content(self, pid, ftype):
-        job = self.get_job(pid)
+    def get_file_content(self, queue, pid, ftype):
+        job = self.get_job(queue, pid)
 
         if ftype == 'input':
             fname = job.inputfile.item()
@@ -67,12 +83,3 @@ class Queue:
             content = f.read()
 
         return fname, content
-
-    def filter(self, state='ALL'):
-        if state == 'ALL':
-            return self.q
-        else:
-            try:
-                return self.q.loc[self.q.state == state]
-            except:
-                return self.q

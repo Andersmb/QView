@@ -82,29 +82,30 @@ class QueueViewer(tk.Text):
         self.create_tags()
         self.configure(background='#000000', foreground='#ffffff', wrap=tk.NONE)
 
-    def display_queue(self, Queue, fields, state):
-        queue = Queue.filter(state=state)
-
+    def display_queue(self, qhandler, fields):
+        queue = qhandler.fetch()
         self.delete(0.1, tk.END)
         self.insert(tk.END, queue[fields])
 
         # Apply tags to color code
         for i, row in queue.iterrows():
             i -= queue.index[0]
-            jobstate = Queue.get_job(row.jobid).state.iloc[0]
+            jobstate = qhandler.get_job(queue, row.jobid).state.iloc[0]
             self.tag_add(jobstate, f'{i + 2}.0', f'{i + 2}.{tk.END}')
             if i % 2 == 0:
                 self.tag_add('evenline', f'{i+1}.0', f'{i+1}.{tk.END}')
             else:
                 self.tag_add('oddline', f'{i+1}.0', f'{i+1}.{tk.END}')
 
-    def display_file(self, Queue, pid, ftype):
-        fname, content = Queue.get_file_content(pid, ftype)
+    def display_file(self, qhandler, pid, ftype, skip_to_end=False):
+        fname, content = qhandler.get_file_content(qhandler.fetch(), pid, ftype)
 
         self.delete(0.1, tk.END)
         self.insert(0.1, f'File path: {fname}\n')
         self.tag_add('filename', '0.0', f'2.{tk.END}')
         self.insert(tk.END, content)
+        if skip_to_end:
+            self.see(tk.END)
 
     def create_tags(self):
         tag_fg_colors = {

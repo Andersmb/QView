@@ -9,12 +9,13 @@ import paramiko as pmk
 from custom_widgets import MyButton, MyLabel, MyFrame, MyEntry, MyCheckbutton, MyOptionMenu, QueueViewer
 from external_viewer import ExternalViewer
 from queue import Queue
+from queue_editor import QueueEditor
 from helpers import from_val
 from exceptions import *
 
 # Define some constants
 CONST_HISTORY_LENGTH = 28  # How long back to look at job history
-CONST_MONITOR_IDLE_TIME = 0.2  # For background monitoring
+CONST_MONITOR_IDLE_TIME = 0.5  # Frequency in sec of background monitoring
 
 
 class Home(tk.Frame):
@@ -56,13 +57,13 @@ class Home(tk.Frame):
         self.set_color()
 
         # Start threads for background monitoring
-        self.thread_jobs = Thread(target=self.monitor_running_pending_jobs, daemon=True)
+        #self.thread_jobs = Thread(target=self.monitor_running_pending_jobs, daemon=True)
         self.thread_selected = Thread(target=self.monitor_selected_text, daemon=True)
-        self.thread_timestamp = Thread(target=self.monitor_output_last_update, daemon=True)
+        #self.thread_timestamp = Thread(target=self.monitor_output_last_update, daemon=True)
 
-        self.thread_jobs.start()
+        #self.thread_jobs.start()
         self.thread_selected.start()
-        self.thread_timestamp.start()
+        #self.thread_timestamp.start()
 
         # Bind events to Home
         self.bind_events()
@@ -183,7 +184,7 @@ class Home(tk.Frame):
         self.entry_foreground_color.grid(row=4, column=1, sticky=tk.W, **pads_inner)
         self.entry_foreground_color.insert(tk.END, self.parent.foreground_color.get())
         MyButton(self.frame_prefs, 'button_colorpicker_fg', image=self.parent.images['icon_colorpicker'], width=20, height=20, command=lambda: self.colorpicker(where='fg')).grid(row=4, column=2, **pads_inner)
-        MyButton(self.frame_prefs, 'button_qheaders', text='Select queue headers', command=self.get_q_headers).grid(row=5, column=1, **pads_inner)
+        MyButton(self.frame_prefs, 'button_qheaders', text='Edit queue', command=self.queue_editor).grid(row=5, column=0, sticky=tk.W, **pads_inner)
 
         MyButton(self.frame_prefs, 'button_savepref', image=self.parent.images['icon_applysettings'], width=75, height=30, command=self.parent.dump_prefs).grid(row=99, column=0, sticky=tk.W, **pads_inner)
 
@@ -200,8 +201,8 @@ class Home(tk.Frame):
         self.label_tooltip = MyLabel(self.frame_bottools, 'idle', text=f'ToolTip: {self.tooltip.get()}', bg='#1f4a46', fg='#ffffff')
         self.label_tooltip.grid(row=0, column=99, **pads_outer)
 
-    def get_q_headers(self):
-        pass
+    def queue_editor(self):
+        return self.notimplemented()
 
     def colorpicker(self, where):
         rgb, hex = colorchooser.askcolor(parent=self, initialcolor=self.parent.defaults['background_color'])
@@ -288,14 +289,14 @@ class Home(tk.Frame):
 
     def print_q(self, *args):
         self.quser.set(self.entry_username.get())
-        fields = ['jobid', 'name', 'partition', 'qos', 'timeleft', 'timelimit', 'submittime']
+        fields = ['jobid', 'name', 'partition', 'timeleft', 'submittime']
 
         state_val = self.filter_job_status.get()
         state_key = from_val(self.job_stati, state_val).strip()
 
-        self.qv.display_queue(Queue(self.quser.get(), self.ssh_client),
-                              fields,
-                              state_key)
+        qhandler = Queue(self.ssh_client, user=self.quser.get(), filters={'state': state_key})
+
+        self.qv.display_queue(qhandler, fields)
 
     def execute_remote(self, cmd):
         stdin, stdout, stderr = self.ssh_client.exec_command(cmd)
@@ -305,12 +306,13 @@ class Home(tk.Frame):
 
     def monitor_running_pending_jobs(self):
         while True:
-            queue = Queue(self.parent.user.get(), self.ssh_client)
-            if queue.q.empty:
+            qhandler = Queue(ssh_client=self.ssh_client, sftp_client=self.sftp_client, user=self.parent.user.get())
+            q = qhandler.fetch()
+            if q.empty:
                 return 0, 0
 
-            nrun = len(queue.q.loc[queue.q.state == 'RUNNING'].index)
-            npen = len(queue.q.loc[queue.q.state == 'PENDING'].index)
+            nrun = len(q.loc[q.state == 'RUNNING'].index)
+            npen = len(q.loc[q.state == 'PENDING'].index)
             self.running_jobs.set(nrun)
             self.pending_jobs.set(npen)
             self.thread_job_alive.set(self.thread_jobs.is_alive())
@@ -327,8 +329,8 @@ class Home(tk.Frame):
     def monitor_output_last_update(self):
         while True:
             pid = self.selected.get()
-            queue = Queue(self.parent.user.get(), ssh_client=self.ssh_client, sftp_client=self.sftp_client)
-            job = queue.get_job(pid)
+            qhandler = Queue(ssh_client=self.ssh_client, sftp_client=self.sftp_client, user=self.quser.get())
+            job = qhandler.get_job(qhandler.fetch(), pid)
             timestamp = None
 
             if not job.empty:
@@ -372,18 +374,18 @@ class Home(tk.Frame):
         self.label_tooltip.config(text=f'Tooltip: {self.tooltip.get()}')
 
     def print_file_contents(self, ftype):
+        qhandler = Queue(ssh_client=self.ssh_client, sftp_client=self.sftp_client, user=self.quser.get())
+
         pid = self.selected.get()
         if self.quser.get() != self.parent.user.get():
             return messagebox.showerror('Error', "You do not have permission to read another user's files.")
         elif not pid:
             return messagebox.showerror('Error', 'No PID selected.')
 
-        queue = Queue(self.quser.get(), ssh_client=self.ssh_client, sftp_client=self.sftp_client)
-
         if self.parent.open_in_separate_window.get():
-            ExternalViewer(self, queue, pid, ftype)
+            ExternalViewer(self, qhandler, pid, ftype)
         else:
-            self.qv.display_file(queue, pid, ftype)
+            self.qv.display_file(qhandler, pid, ftype, skip_to_end=True if ftype == 'output' else False)
 
     def setup_remote_connection(self):
         hostname = self.parent.hostnames[self.parent.cluster.get()]
