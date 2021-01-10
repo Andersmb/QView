@@ -33,10 +33,11 @@
   "label_username": "Filter queue by user name (leave empty for all users)",
   "label_jobstatus": "Filter queue by job status",
   "label_search": "Filter queue by custom word search. Click label for ANY/ALL mode",
-  "label_submitdate": "Filter queue by submit date",
+  "label_submitdate": "Filter queue by submit date (not implemented)",
   "label_fontsize": "Change the fontsize for queue window",
   "button_increasefont": "Increase font size by 2",
   "button_decreasefont": "Decrease font size by 2",
   "button_savepref": "Save current settings to file, auto loads on next startup",
-  "button_colorpicker": "Select background color (excluding queue window)"
+  "button_colorpicker": "Select background color (excluding queue window)",
+  "label_partition": "Filter by partition (not implemented)"
 }

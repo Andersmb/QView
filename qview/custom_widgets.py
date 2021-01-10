@@ -82,10 +82,10 @@ class QueueViewer(tk.Text):
         self.create_tags()
         self.configure(background='#000000', foreground='#ffffff', wrap=tk.NONE)
 
-    def display_queue(self, qhandler, fields):
+    def display_queue(self, qhandler, headers):
         queue = qhandler.fetch()
         self.delete(0.1, tk.END)
-        self.insert(tk.END, queue[fields])
+        self.insert(tk.END, queue[headers])
 
         # Apply tags to color code
         for i, row in queue.iterrows():
@@ -117,11 +117,34 @@ class QueueViewer(tk.Text):
             'filename': '#de7878'
         }
         tag_bg_colors = {
-            'oddline': '#1f1f1f'}
-
+            'oddline': '#1f1f1f'
+        }
         for status, color in tag_fg_colors.items():
             self.tag_configure(status, foreground=color)
 
         for status, color in tag_bg_colors.items():
             self.tag_configure(status, background=color)
+
+        self.tag_configure('matched', background='#ffb0ab', foreground='#000000')
+
         self.tag_raise(tk.SEL)
+
+    def find_all(self, pattern, tag, start="1.0", end='end', nocase=True, regexp=False):
+        start = self.index(start)
+        end = self.index(end)
+
+        self.mark_set('match_start', start)
+        self.mark_set('match_end', start)
+        self.mark_set('search_limit', end)
+
+        counter = tk.IntVar()
+        while True:
+            index = self.search(pattern=pattern, index='match_end', stopindex='search_limit', count=counter, regexp=regexp, nocase=nocase)
+            if index == "":
+                break
+            if counter.get() == 0:
+                break
+
+            self.mark_set('match_start', index)
+            self.mark_set('match_end', f'{index}+{counter.get()}c')
+            self.tag_add(tag, 'match_start', 'match_end')

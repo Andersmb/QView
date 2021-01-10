@@ -21,9 +21,6 @@ from home import Home
 DEV = False
 ####################
 
-COLOR_BG = '#2e2d2b'
-COLOR_TEXT = '#ffffff'
-
 
 class QView(tk.Tk):
     """
@@ -36,7 +33,6 @@ class QView(tk.Tk):
         self.file_tooltips = self.dir_root.joinpath('tooltips.json')
         self.file_prefs = self.dir_root.joinpath('preferences.json')
         self.tmpdir = Path(tempfile.mkdtemp())
-        self.configure(background=COLOR_BG)
 
         # Initialize tk variables
         self.startup = tk.BooleanVar()
@@ -53,7 +49,8 @@ class QView(tk.Tk):
         self.defaults = {'fontsize_q': 14,
                          'background_color': '#ffffff',
                          'foreground_color': '#000000',
-                         'external_viewer': False}
+                         'external_viewer': False,
+                         'headers': 'jobid name partition timeleft submittime'}
 
         # Load and apply prefs
         self.prefs = self.load_prefs()
@@ -135,13 +132,15 @@ class QView(tk.Tk):
             'fontsize_q': self.font_q.actual()['size'],
             'external_viewer': self.open_in_separate_window.get(),
             'background_color': self.background_color.get(),
-            'foreground_color': self.foreground_color.get()
+            'foreground_color': self.foreground_color.get(),
+            'queue_format': self.queue_format.get()
         }
 
     def set_current_prefs(self):
         self.open_in_separate_window.set(self.prefs['external_viewer'])
         self.background_color.set(self.prefs['background_color'])
         self.foreground_color.set(self.prefs['foreground_color'])
+        self.queue_format.set(self.prefs['queue_format'])
 
     def load_prefs(self):
         try:

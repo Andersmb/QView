@@ -47,6 +47,12 @@ class Home(tk.Frame):
         self.job_history = [dt.today().date() - timedelta(days=i) for i in range(CONST_HISTORY_LENGTH)]
         self.parent.job_history_startdate.set(str(dt.today().date()))
 
+        # Define partitions
+        self.partition = tk.StringVar()
+        self.partitions = self.execute_remote('/usr/bin/sinfo --noheader -O partition').split()
+        self.partitions.append('All partitions')
+        self.partition.set(self.partitions[-1])
+
         # Define the job status variables and set default to all jobs
         self.filter_job_status = tk.StringVar()
         self.job_stati = {'ALL': 'All jobs', 'RUNNING': 'Running', 'PENDING': 'Pending', 'COMPLETED': 'Completed', 'TIMEOUT': 'Timeout'}
@@ -57,13 +63,13 @@ class Home(tk.Frame):
         self.set_color()
 
         # Start threads for background monitoring
-        #self.thread_jobs = Thread(target=self.monitor_running_pending_jobs, daemon=True)
+        self.thread_jobs = Thread(target=self.monitor_running_pending_jobs, daemon=True)
         self.thread_selected = Thread(target=self.monitor_selected_text, daemon=True)
-        #self.thread_timestamp = Thread(target=self.monitor_output_last_update, daemon=True)
+        self.thread_timestamp = Thread(target=self.monitor_output_last_update, daemon=True)
 
-        #self.thread_jobs.start()
+        self.thread_jobs.start()
         self.thread_selected.start()
-        #self.thread_timestamp.start()
+        self.thread_timestamp.start()
 
         # Bind events to Home
         self.bind_events()
@@ -129,11 +135,14 @@ class Home(tk.Frame):
         MyLabel(self.frame_filters, 'label_submitdate', text='Submit date:').grid(row=3, column=0, sticky=tk.W, **pads_inner)
         tk.OptionMenu(self.frame_filters, self.parent.job_history_startdate, *self.job_history).grid(row=3, column=1, sticky=tk.W, **pads_inner)
 
+        MyLabel(self.frame_filters, 'label_partition', text='Partition:').grid(row=4, column=0, sticky=tk.W, **pads_inner)
+        tk.OptionMenu(self.frame_filters, self.partition, *self.partitions).grid(row=4, column=1, sticky=tk.W, **pads_inner)
+
         self.label_search = MyLabel(self.frame_filters, 'label_search', text='Search ANY:')
-        self.label_search.grid(row=4, column=0, sticky=tk.W, **pads_inner)
+        self.label_search.grid(row=5, column=0, sticky=tk.W, **pads_inner)
         self.label_search.bind('<Button-1>', self.update_search_mode)
         self.entry_search = MyEntry(self.frame_filters, width=10)
-        self.entry_search.grid(row=4, column=1, sticky=tk.W, **pads_inner)
+        self.entry_search.grid(row=5, column=1, sticky=tk.W, **pads_inner)
 
         MyLabel(self.frame_status, 'label_status', text="STATUS").grid(row=0, column=0, columnspan=2, **pads_outer)
         MyLabel(self.frame_status, 'label_hostname', text="Hostname:").grid(row=1, column=0, sticky=tk.W, **pads_inner)
@@ -202,7 +211,8 @@ class Home(tk.Frame):
         self.label_tooltip.grid(row=0, column=99, **pads_outer)
 
     def queue_editor(self):
-        return self.notimplemented()
+        qhandler = Queue(ssh_client=self.ssh_client, sftp_client=self.sftp_client, user='all')
+        return QueueEditor(self, qhandler)
 
     def colorpicker(self, where):
         rgb, hex = colorchooser.askcolor(parent=self, initialcolor=self.parent.defaults['background_color'])
@@ -289,14 +299,13 @@ class Home(tk.Frame):
 
     def print_q(self, *args):
         self.quser.set(self.entry_username.get())
-        fields = ['jobid', 'name', 'partition', 'timeleft', 'submittime']
 
         state_val = self.filter_job_status.get()
         state_key = from_val(self.job_stati, state_val).strip()
 
         qhandler = Queue(self.ssh_client, user=self.quser.get(), filters={'state': state_key})
 
-        self.qv.display_queue(qhandler, fields)
+        self.qv.display_queue(qhandler, self.parent.queue_format.get().split())
 
     def execute_remote(self, cmd):
         stdin, stdout, stderr = self.ssh_client.exec_command(cmd)
@@ -324,6 +333,7 @@ class Home(tk.Frame):
             if s and s != self.selected.get():
                 self.selected.set(s)
             self.thread_sel_alive.set(self.thread_selected.is_alive())
+            time.sleep(CONST_MONITOR_IDLE_TIME)
             time.sleep(CONST_MONITOR_IDLE_TIME)
 
     def monitor_output_last_update(self):
@@ -385,7 +395,10 @@ class Home(tk.Frame):
         if self.parent.open_in_separate_window.get():
             ExternalViewer(self, qhandler, pid, ftype)
         else:
-            self.qv.display_file(qhandler, pid, ftype, skip_to_end=True if ftype == 'output' else False)
+            try:
+                self.qv.display_file(qhandler, pid, ftype, skip_to_end=True if ftype == 'output' else False)
+            except FileNotFoundError as e:
+                tk.messagebox.showerror('Error', e)
 
     def setup_remote_connection(self):
         hostname = self.parent.hostnames[self.parent.cluster.get()]

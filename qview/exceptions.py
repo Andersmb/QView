@@ -4,3 +4,4 @@ class AmbiguousJobError(Exception):
 
 class NotMatchedError(Exception):
     pass
+
