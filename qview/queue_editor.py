@@ -52,11 +52,14 @@ class QueueEditor(tk.Toplevel):
         tk.Label(self.mid, text='---------').pack()
         tk.Button(self.mid, text='Move up', command=self.move_up).pack()
         tk.Button(self.mid, text='Move down', command=self.move_down).pack()
+        tk.Label(self.mid, text='---------').pack()
         tk.Button(self.mid, text='Preview selection', command=self.preview).pack()
+        tk.Label(self.mid, text='---------').pack()
 
         for t in self.themes:
             tk.Button(self.mid, text=f'Theme {t["id"]}: {t["name"]}', command=lambda headers=t["headers"].split(): self.set_theme(headers)).pack()
 
+        tk.Label(self.mid, text='---------').pack()
         tk.Button(self.mid, text='Save and close', command=self.save).pack()
 
         self.available_headers.pack(fill=tk.BOTH, expand=True)
