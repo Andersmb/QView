@@ -75,6 +75,85 @@ class MyEntry(tk.Entry):
         self.configure(borderwidth=1, highlightthickness=0)
 
 
+class AutoCompleteEntry(MyEntry):
+    def __init__(self, parent, entries, **kwargs):
+        MyEntry.__init__(self, parent, **kwargs)
+        self.focus()
+        self.entries = entries
+
+        self.var = tk.StringVar()  # The var to match
+        self['textvariable'] = self.var  # Associate a textvariable with the Entry
+        self.var.trace_add('write', self.on_trace)  # Add observer to keep capture when self.var changes
+        self.lb_exists = False  # Keep track of when the listbox exists
+
+        self.bind('<Escape>', self.close_lb)
+        self.bind('<Right>', self.select)
+        self.bind('<Up>', lambda event: self.move('up', event))
+        self.bind('<Down>', lambda event: self.move('down', event))
+
+
+    def on_trace(self, name, index, mode):
+        if self.var.get() == '':
+            if self.lb_exists:
+                self.lb.destroy()
+                self.lb_exists = False
+        else:
+            matches = self.get_matches()
+            if matches:
+                if not self.lb_exists:
+                    self.lb = tk.Listbox(width=self['width'],
+                                         bg='#292b4a',
+                                         fg='#b0c8ff',
+                                         selectbackground='#6e3478')
+                    self.lb.place(in_=self, relx=0, rely=1)
+                    self.lb.bind('<Right>', self.select)
+                    self.lb.bind('<Escape>', self.close_lb)
+                    self.lb.bind('<Double-Button-1>', self.select)
+                    self.lb_exists = True
+
+                self.lb.delete(0, tk.END)
+                for m in matches:
+                    self.lb.insert(tk.END, m)
+            else:
+                if self.lb_exists:
+                    self.lb.destroy()
+                    self.lb_exists = False
+
+    def move(self, direction, event):
+        if not self.lb_exists:
+            return
+        if self.lb:
+            if self.lb.curselection() == ():
+                index = '-1'
+            else:
+                index = self.lb.curselection()[0]
+
+            test = int(index) < self.lb.size()-1 if direction == 'down' else int(index) > 0
+            if test:
+                self.lb.selection_clear(index)
+                index = str(int(index) + 1) if direction == 'down' else str(int(index) - 1)
+
+                self.lb.see(index)
+                self.lb.selection_set(index)
+                self.lb.activate(index)
+
+    def select(self, event):
+        if self.lb_exists:
+            self.var.set(self.lb.get(tk.ACTIVE))
+            self.lb.destroy()
+            self.lb_exists = False
+            self.icursor(tk.END)
+            self.focus_set()
+
+    def close_lb(self, event):
+        if self.lb_exists:
+            self.lb.destroy()
+            self.lb_exists = False
+
+    def get_matches(self):
+        return [e for e in self.entries if e.startswith(self.var.get())]
+
+
 class QueueViewer(tk.Text):
     def __init__(self, parent, **kwargs):
         tk.Text.__init__(self, parent, **kwargs)

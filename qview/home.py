@@ -6,7 +6,7 @@ from tkinter import messagebox, colorchooser
 import re
 
 import paramiko as pmk
-from custom_widgets import MyButton, MyLabel, MyFrame, MyEntry, MyCheckbutton, MyOptionMenu, QueueViewer
+from custom_widgets import MyButton, MyLabel, MyFrame, MyEntry, MyCheckbutton, MyOptionMenu, QueueViewer, AutoCompleteEntry
 from external_viewer import ExternalViewer
 from queue import Queue
 from queue_editor import QueueEditor
@@ -126,9 +126,10 @@ class Home(tk.Frame):
 
         MyLabel(self.frame_filters, 'label_filters', text="FILTERS").grid(row=0, column=0, columnspan=2, **pads_outer)
         MyLabel(self.frame_filters, 'label_username', text='Username:').grid(row=1, column=0, sticky=tk.W, **pads_inner)
-        self.entry_username = MyEntry(self.frame_filters, width=10)
+        self.entry_username = AutoCompleteEntry(self.frame_filters, self.get_all_users(), width=10)
         self.entry_username.grid(row=1, column=1, sticky=tk.W, **pads_inner)
         self.entry_username.insert(0, self.parent.user.get())
+        self.entry_username.close_lb(None)
 
         MyLabel(self.frame_filters, 'label_jobstatus', text='Job status:').grid(row=2, column=0, sticky=tk.W, **pads_inner)
         MyOptionMenu(self.frame_filters, self.filter_job_status, *[val for key, val in self.job_stati.items()]).grid(row=2, column=1, sticky=tk.W, **pads_inner)
@@ -214,6 +215,16 @@ class Home(tk.Frame):
         qhandler = Queue(ssh_client=self.ssh_client, sftp_client=self.sftp_client, user='all')
         return QueueEditor(self, qhandler)
 
+    def get_all_users(self):
+        cluster = self.parent.cluster.get()
+        if cluster == 'stallo':
+            d = '/home'
+        else:
+            d = '/cluster/home'
+
+        users = self.execute_remote(f'ls {d}').split()
+        return users
+
     def colorpicker(self, where):
         rgb, hex = colorchooser.askcolor(parent=self, initialcolor=self.parent.defaults['background_color'])
         if where == 'bg':
@@ -298,6 +309,9 @@ class Home(tk.Frame):
             self.set_search_all()
 
     def print_q(self, *args):
+        if self.entry_username.lb_exists:
+            self.entry_username.select(None)
+            self.entry_username.lb.destroy()
         self.quser.set(self.entry_username.get())
 
         state_val = self.filter_job_status.get()
