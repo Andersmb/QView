@@ -48,10 +48,11 @@ class Home(tk.Frame):
         self.parent.job_history_startdate.set(str(dt.today().date()))
 
         # Define partitions
-        self.partition = tk.StringVar()
-        self.partitions = self.execute_remote('/usr/bin/sinfo --noheader -O partition').split()
-        self.partitions.append('All partitions')
-        self.partition.set(self.partitions[-1])
+        self.filter_partition = tk.StringVar()
+        partitions = self.execute_remote('/usr/bin/sinfo --noheader -O partition').split()
+        self.partitions = {key.split('*')[0]: key.split('*')[0] for key in partitions}  # Get rid of * symbol, normal*
+        self.partitions['ALL'] = 'All partitions'
+        self.filter_partition.set(self.partitions['ALL'])
 
         # Define the job status variables and set default to all jobs
         self.filter_job_status = tk.StringVar()
@@ -137,7 +138,7 @@ class Home(tk.Frame):
         tk.OptionMenu(self.frame_filters, self.parent.job_history_startdate, *self.job_history).grid(row=3, column=1, sticky=tk.W, **pads_inner)
 
         MyLabel(self.frame_filters, 'label_partition', text='Partition:').grid(row=4, column=0, sticky=tk.W, **pads_inner)
-        tk.OptionMenu(self.frame_filters, self.partition, *self.partitions).grid(row=4, column=1, sticky=tk.W, **pads_inner)
+        tk.OptionMenu(self.frame_filters, self.filter_partition, *[val for key, val in self.partitions.items()]).grid(row=4, column=1, sticky=tk.W, **pads_inner)
 
         self.label_search = MyLabel(self.frame_filters, 'label_search', text='Search ANY:')
         self.label_search.grid(row=5, column=0, sticky=tk.W, **pads_inner)
@@ -315,9 +316,12 @@ class Home(tk.Frame):
         self.quser.set(self.entry_username.get())
 
         state_val = self.filter_job_status.get()
-        state_key = from_val(self.job_stati, state_val).strip()
+        state_key = from_val(self.job_stati, state_val)
 
-        qhandler = Queue(self.ssh_client, user=self.quser.get(), filters={'state': state_key})
+        partition_val = self.filter_partition.get()
+        partition_key = from_val(self.partitions, partition_val)
+
+        qhandler = Queue(self.ssh_client, user=self.quser.get(), filters={'state': state_key, 'partition': partition_key})
 
         self.qv.display_queue(qhandler, self.parent.queue_format.get().split())
 

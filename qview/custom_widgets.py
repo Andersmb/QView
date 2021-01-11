@@ -91,7 +91,6 @@ class AutoCompleteEntry(MyEntry):
         self.bind('<Up>', lambda event: self.move('up', event))
         self.bind('<Down>', lambda event: self.move('down', event))
 
-
     def on_trace(self, name, index, mode):
         if self.var.get() == '':
             if self.lb_exists:

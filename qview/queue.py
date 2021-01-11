@@ -13,7 +13,7 @@ pd.set_option('display.max_colwidth', None)
 class Queue:
     def __init__(self, ssh_client=None, sftp_client=None, user=None, filters=None, ext_input='.inp', ext_output='.out'):
         if filters is None:
-            filters = {'state': 'ALL'}
+            filters = {'state': 'ALL', 'partition': 'ALL'}
         self.ssh_client = ssh_client
         self.sftp_client = sftp_client
         self.ext_input = ext_input
@@ -55,13 +55,15 @@ class Queue:
 
         queue = pd.DataFrame.from_dict(q)
         state = self.filters['state']
-        if state == 'ALL':
+        partition = self.filters['partition']
+        return self.filter_queue(queue, self.filters)
+
+    def filter_queue(self, queue, filters):
+        query = " & ".join([f'(@queue.{key} == "{val}")' for key, val in filters.items() if val != 'ALL'])
+        if query == '':
             return queue
         else:
-            try:
-                return queue.loc[queue.state == state]
-            except:
-                return queue
+            return queue.query(query)
 
     def get_job(self, queue, pid):
         job = queue.loc[queue.jobid == pid]
