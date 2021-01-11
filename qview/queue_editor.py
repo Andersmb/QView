@@ -82,9 +82,7 @@ class QueueEditor(tk.Toplevel):
         for i, h in enumerate(headers):
             self.active_headers.insert(i, h)
 
-        for i, header in enumerate(sorted(self.headers)):
-            if header not in [self.active_headers.get(i) for i in range(self.active_headers.size())]:
-                self.available_headers.insert(i, header)
+        self.update_avails()
 
     def activate(self, index=None, header=None):
         if index is None and header is None:
@@ -97,8 +95,14 @@ class QueueEditor(tk.Toplevel):
         if index is None and header is None:
             index, header = self.get_selection(self.active_headers)
         self.active_headers.delete(index)
-        self.available_headers.insert(0, header)
+        self.update_avails()
         self.available_headers.selection_set(0)
+
+    def update_avails(self):
+        self.available_headers.delete(0, tk.END)
+        for h in self.headers:
+            if h not in [self.active_headers.get(i) for i in range(self.active_headers.size())]:
+                self.available_headers.insert(tk.END, h)
 
     def move_up(self):
         index, header = self.get_selection(self.active_headers)

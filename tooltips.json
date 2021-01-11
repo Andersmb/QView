@@ -39,5 +39,6 @@
   "button_decreasefont": "Decrease font size by 2",
   "button_savepref": "Save current settings to file, auto loads on next startup",
   "button_colorpicker": "Select background color (excluding queue window)",
-  "label_partition": "Filter by partition (not implemented)"
+  "label_partition": "Filter by partition (not implemented)",
+  "button_queue_editor": "Modify which column headers to include in the queue"
 }

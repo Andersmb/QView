@@ -23,10 +23,10 @@ class Queue:
         self.scratch = '/cluster/work/jobs'
 
         self.field_width = 100
-        self.headers = {'jobid', 'name', 'username', 'state', 'submittime', 'timelimit', 'command', 'endtime',
-                       'minmemory', 'mintime', 'nice', 'nodelist', 'numcpus', 'numnodes', 'numtasks', 'partition',
-                       'priority', 'qos', 'starttime', 'stdin', 'stdout', 'stderr', 'timeleft', 'timeused', 'userid',
-                       'workdir'}
+        self.headers = sorted(['jobid', 'name', 'username', 'userid', 'state', 'timelimit', 'timeleft',
+                        'timeused', 'stdin', 'stdout', 'stderr', 'workdir', 'starttime', 'submittime', 'nice', 'priority',
+                        'qos', 'partition', 'minmemory', 'numnodes', 'numcpus', 'numtasks', 'mintime', 'nodelist',
+                        'reason', 'command'])
 
     def fetch(self):
         fmt = [el+f':.{self.field_width}' for el in self.headers]
@@ -53,9 +53,7 @@ class Queue:
 
             q.append(d)
 
-        queue = pd.DataFrame.from_dict(q)
-        state = self.filters['state']
-        partition = self.filters['partition']
+        queue = pd.DataFrame.from_dict(q).sort_values(by=['jobid']).reset_index()
         return self.filter_queue(queue, self.filters)
 
     def filter_queue(self, queue, filters):

@@ -195,7 +195,7 @@ class Home(tk.Frame):
         self.entry_foreground_color.grid(row=4, column=1, sticky=tk.W, **pads_inner)
         self.entry_foreground_color.insert(tk.END, self.parent.foreground_color.get())
         MyButton(self.frame_prefs, 'button_colorpicker_fg', image=self.parent.images['icon_colorpicker'], width=20, height=20, command=lambda: self.colorpicker(where='fg')).grid(row=4, column=2, **pads_inner)
-        MyButton(self.frame_prefs, 'button_qheaders', text='Edit queue', command=self.queue_editor).grid(row=5, column=0, sticky=tk.W, **pads_inner)
+        MyButton(self.frame_prefs, 'button_queue_editor', text='Edit queue', command=self.queue_editor).grid(row=5, column=0, sticky=tk.W, **pads_inner)
 
         MyButton(self.frame_prefs, 'button_savepref', image=self.parent.images['icon_applysettings'], width=75, height=30, command=self.parent.dump_prefs).grid(row=99, column=0, sticky=tk.W, **pads_inner)
 

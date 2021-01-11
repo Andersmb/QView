@@ -18,7 +18,7 @@ from home import Home
 
 
 ####################
-DEV = False
+DEV = True
 ####################
 
 
@@ -70,6 +70,12 @@ class QView(tk.Tk):
                         'saga': '/cluster/work/jobs',
                         'betzy': '/cluster/work/jobs'}
 
+        # Store cluster information
+        self.hostnames = OrderedDict({'stallo': 'stallo.uit.no',
+                                      'fram': 'fram.sigma2.no',
+                                      'saga': 'saga.sigma2.no',
+                                      'betzy': 'betzy.sigma2.no'})
+
         # Store image objects for buttons
         self.images = {'stallo': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('cluster_stallo_100.jpg'))),
                        "saga": ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('cluster_saga_100.jpg'))),
@@ -99,12 +105,6 @@ class QView(tk.Tk):
 
         # Load file containing tooltip messages
         self.tooltips = self.load_tooltips()
-
-        # Store cluster information
-        self.hostnames = OrderedDict({'stallo': 'stallo.uit.no',
-                                      'fram': 'fram.sigma2.no',
-                                      'saga': 'saga.sigma2.no',
-                                      'betzy': 'betzy.sigma2.no'})
 
         # Initialize windows
         self.window_login = Login(self, self.startup.get())
@@ -151,7 +151,7 @@ class QView(tk.Tk):
 
     def dump_prefs(self):
         with open(self.file_prefs, 'w') as f:
-            json.dump(self.get_current_prefs(), f)
+            json.dump(self.get_current_prefs(), f, indent=2)
         messagebox.showinfo(self.name, f'Preferences stored in {self.file_prefs}')
 
 
