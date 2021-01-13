@@ -424,7 +424,7 @@ class Home(tk.Frame):
             return messagebox.showerror('Error', 'No PID selected.')
 
         if self.parent.open_in_separate_window.get():
-            ExternalViewer(self, qhandler, pid, ftype)
+            ExternalViewer(self, qhandler, pid, ftype, skip_to_end=True if ftype == 'output' else False)
         else:
             try:
                 self.qv.display_file(qhandler, pid, ftype, skip_to_end=True if ftype == 'output' else False)
