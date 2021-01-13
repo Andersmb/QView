@@ -207,8 +207,9 @@ class Home(tk.Frame):
 
         self.frame_prefs.sub_bottom = tk.Frame(self.frame_prefs)
         self.frame_prefs.sub_bottom.grid(row=99, column=0, sticky=tk.W)
-        MyButton(self.frame_prefs.sub_bottom, 'button_queue_editor', image=self.parent.images['icon_edit_queue'], width=30, height=30, command=self.queue_editor).grid(row=0, column=0, sticky=tk.W, **pads_inner)
-        MyButton(self.frame_prefs.sub_bottom, 'button_savepref', image=self.parent.images['icon_applysettings'], width=30, height=30, command=self.parent.dump_prefs).grid(row=0, column=1, sticky=tk.W, **pads_inner)
+        MyButton(self.frame_prefs.sub_bottom, 'button_queue_editor', image=self.parent.images['icon_edit_queue'], width=30, height=30, command=self.queue_editor).grid(row=0, column=0, sticky=tk.W, **pads_outer)
+        MyButton(self.frame_prefs.sub_bottom, 'button_restore_defaults', image=self.parent.images['icon_defaults'], width=30, height=30, command=self.parent.restore_defaults).grid(row=0, column=1, sticky=tk.W, **pads_outer)
+        MyButton(self.frame_prefs.sub_bottom, 'button_savepref', image=self.parent.images['icon_applysettings'], width=30, height=30, command=self.parent.dump_prefs).grid(row=0, column=2, sticky=tk.W, **pads_outer)
 
         # Main queue Text widget
         self.qv = QueueViewer(self.frame_q)

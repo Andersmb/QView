@@ -50,7 +50,7 @@ class QView(tk.Tk):
                          'background_color': '#ffffff',
                          'foreground_color': '#000000',
                          'external_viewer': False,
-                         'headers': 'jobid name partition timeleft submittime'}
+                         'queue_format': 'jobid name partition timeleft submittime'}
 
         # Load and apply prefs
         self.prefs = self.load_prefs()
@@ -103,7 +103,8 @@ class QView(tk.Tk):
                        'icon_colorpicker': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_colorpicker.png'))),
                        'icon_applysettings': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_applysettings.png'))),
                        'icon_ssh': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_ssh.png'))),
-                       'icon_edit_queue': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_edit_queue.png')))}
+                       'icon_edit_queue': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_edit_queue.png'))),
+                       'icon_defaults': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_defaults.png')))}
 
         # Load file containing tooltip messages
         self.tooltips = self.load_tooltips()
@@ -156,6 +157,17 @@ class QView(tk.Tk):
             json.dump(self.get_current_prefs(), f, indent=2)
         messagebox.showinfo(self.name, f'Preferences stored in {self.file_prefs}')
 
+    def restore_defaults(self):
+        self.prefs = self.defaults
+        self.set_current_prefs()
+
+        self.window_home.entry_background_color.delete(0, tk.END)
+        self.window_home.entry_foreground_color.delete(0, tk.END)
+        self.window_home.entry_background_color.insert(0, self.prefs['background_color'])
+        self.window_home.entry_foreground_color.insert(0, self.prefs['foreground_color'])
+
+        self.window_home.set_color()
+        self.window_home.print_q()
 
 if __name__ == "__main__":
     app = QView()
