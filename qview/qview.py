@@ -86,6 +86,7 @@ class QView(tk.Tk):
                        'icon_output': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_output.png'))),
                        'icon_error': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_error.png'))),
                        'icon_job': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_job.png'))),
+                       'icon_queue': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_queue.png'))),
                        'icon_history': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_history.png'))),
                        'icon_stallo': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('cluster_stallo_60.jpg'))),
                        'icon_saga': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('cluster_saga_60.jpg'))),
@@ -104,7 +105,8 @@ class QView(tk.Tk):
                        'icon_applysettings': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_applysettings.png'))),
                        'icon_ssh': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_ssh.png'))),
                        'icon_edit_queue': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_edit_queue.png'))),
-                       'icon_defaults': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_defaults.png')))}
+                       'icon_defaults': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_defaults.png'))),
+                       'icon_killjob': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_killjob.png')))}
 
         # Load file containing tooltip messages
         self.tooltips = self.load_tooltips()

@@ -43,5 +43,6 @@
   "button_queue_editor": "Modify which column headers to include in the queue",
   "button_ssh": "Reestablish SSH connection",
   "label_externalviewer": "Open files in an external viewer",
-  "button_defaults": "Reset preferences to defaults"
+  "button_defaults": "Reset preferences to defaults",
+  "button_killjob": "Kill selected job. Ctrl-click for killing all jobs"
 }

@@ -110,14 +110,20 @@ class Home(tk.Frame):
 
         # Top tools
         MyLabel(self.frame_toptools, 'label_tools', text="TOOLS").grid(row=0, column=0, columnspan=2, **pads_outer)
-        MyButton(self.frame_toptools, 'button_print_q', image=self.parent.images['cow'], width=60, height=60, command=self.print_q).grid(row=1, column=0, columnspan=2, **pads_inner)
+        MyButton(self.frame_toptools, 'button_print_q', image=self.parent.images['icon_queue'], width=60, height=60, command=self.print_q).grid(row=1, column=0, columnspan=2, **pads_inner)
+        MyButton(self.frame_toptools, 'button_history', image=self.parent.images['icon_history'], width=60, height=60, command=self.notimplemented).grid(row=1, column=2, columnspan=2, **pads_inner)
+
         MyButton(self.frame_toptools, 'button_input', image=self.parent.images['icon_input'], width=30, height=30, command=lambda: self.print_file_contents('input')).grid(row=2, column=0, **pads_inner)
         MyButton(self.frame_toptools, 'button_output', image=self.parent.images['icon_output'], width=30, height=30, command=lambda: self.print_file_contents('output')).grid(row=2, column=1, **pads_inner)
-        MyButton(self.frame_toptools, 'button_error', image=self.parent.images['icon_error'], width=30, height=30, command=lambda: self.print_file_contents('error')).grid(row=3, column=0, **pads_inner)
-        MyButton(self.frame_toptools, 'button_job', image=self.parent.images['icon_job'], width=30, height=30, command=lambda: self.print_file_contents('job')).grid(row=3, column=1, **pads_inner)
-        MyButton(self.frame_toptools, 'button_history', image=self.parent.images['icon_history'], width=30, height=30, command=self.notimplemented).grid(row=4, column=0, pady=2, padx=2)
-        MyButton(self.frame_toptools, 'button_cost', image=self.parent.images['icon_cost'], width=30, height=30, command=self.notimplemented).grid(row=4, column=1, **pads_inner)
-        MyButton(self.frame_toptools, 'button_cpu', image=self.parent.images['icon_cpu'], width=30, height=30, command=self.notimplemented).grid(row=5, column=0, **pads_inner)
+        MyButton(self.frame_toptools, 'button_error', image=self.parent.images['icon_error'], width=30, height=30, command=lambda: self.print_file_contents('error')).grid(row=2, column=2, **pads_inner)
+        MyButton(self.frame_toptools, 'button_job', image=self.parent.images['icon_job'], width=30, height=30, command=lambda: self.print_file_contents('job')).grid(row=2, column=3, **pads_inner)
+
+        MyButton(self.frame_toptools, 'button_cost', image=self.parent.images['icon_cost'], width=30, height=30, command=self.notimplemented).grid(row=3, column=0, **pads_inner)
+        MyButton(self.frame_toptools, 'button_cpu', image=self.parent.images['icon_cpu'], width=30, height=30, command=self.notimplemented).grid(row=3, column=1, **pads_inner)
+        killbutton = MyButton(self.frame_toptools, 'button_killjob', image=self.parent.images['icon_killjob'], command=self.kill_job, width=30, height=30)
+        killbutton.grid(row=3, column=2, **pads_inner)
+        killbutton.bind('<Control-Button-1>', self.kill_job)
+
 
         MyLabel(self.frame_visualization, 'label_visualization', text="VISUALS").grid(row=0, column=0, pady=5, padx=5)
         MyButton(self.frame_visualization, 'button_scfconv', image=self.parent.images['icon_scfconv'], width=50, height=50, command=self.notimplemented).grid(row=1, column=0, **pads_inner)
@@ -274,6 +280,24 @@ class Home(tk.Frame):
 
         for frame in frames:
             frame.configure(background=self.parent.background_color.get())
+
+    def kill_job(self, event=None):
+        pid = self.selected.get()
+        if not pid:
+            return messagebox.showinfo(self.parent.name, 'No PID selected')
+        if self.quser.get()!= self.parent.user.get():
+            return messagebox.showerror('You cannot kill another user\'s job.')
+
+        if event is not None:
+            if messagebox.askyesno('WARNING',
+                                   "You are about to kill all jobs in your queue. Are you sure you want to do this?"):
+                if messagebox.askyesno('WARNING', 'Just double checking. Kill all jobs?'):
+                    self.execute_remote(f'scancel -u {self.parent.user.get()}')
+        else:
+            if messagebox.askyesno('Warning', f'Are you sure you want to kill job {pid}?'):
+                self.execute_remote(f'scancel {pid}')
+            else:
+                print('Nothing happened')
 
     def gather_children(self, widgets, frames=[], children=[]):
         if not widgets:
