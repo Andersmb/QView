@@ -101,7 +101,9 @@ class QView(tk.Tk):
                        'icon_+': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_+.png'))),
                        'icon_-': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_-.png'))),
                        'icon_colorpicker': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_colorpicker.png'))),
-                       'icon_applysettings': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_applysettings.png')))}
+                       'icon_applysettings': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_applysettings.png'))),
+                       'icon_ssh': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_ssh.png'))),
+                       'icon_edit_queue': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_edit_queue.png')))}
 
         # Load file containing tooltip messages
         self.tooltips = self.load_tooltips()
