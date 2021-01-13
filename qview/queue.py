@@ -26,7 +26,7 @@ class Queue:
         self.headers = sorted(['jobid', 'name', 'username', 'userid', 'state', 'timelimit', 'timeleft',
                         'timeused', 'stdin', 'stdout', 'stderr', 'workdir', 'starttime', 'submittime', 'nice', 'priority',
                         'qos', 'partition', 'minmemory', 'numnodes', 'numcpus', 'numtasks', 'mintime', 'nodelist',
-                        'reason', 'command'])
+                        'reason', 'command', 'reasonlist', 'statecompact', 'endtime'])
 
     def fetch(self):
         fmt = [el+f':.{self.field_width}' for el in self.headers]
