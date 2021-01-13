@@ -26,6 +26,9 @@ class QueueEditor(tk.Toplevel):
 
         self.create_widgets()
 
+        self.available_headers.bind('<Double-Button-1>', self.activate)
+        self.active_headers.bind('<Double-Button-1>', self.deactivate)
+
     def create_widgets(self):
         self.topleft = MyFrame(self)
         self.topright = MyFrame(self)
@@ -84,14 +87,14 @@ class QueueEditor(tk.Toplevel):
 
         self.update_avails()
 
-    def activate(self, index=None, header=None):
+    def activate(self, event, index=None, header=None):
         if index is None and header is None:
             index, header = self.get_selection(self.available_headers)
         self.available_headers.delete(index)
         self.active_headers.insert(0, header)
         self.active_headers.selection_set(0)
 
-    def deactivate(self, index=None, header=None):
+    def deactivate(self, event, index=None, header=None):
         if index is None and header is None:
             index, header = self.get_selection(self.active_headers)
         self.active_headers.delete(index)
