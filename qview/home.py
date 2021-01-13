@@ -179,25 +179,36 @@ class Home(tk.Frame):
                      relief=relief).grid(row=row+1, column=col, **pads_inner)
 
         MyLabel(self.frame_prefs, 'label_preferences', text="PREFERENCES").grid(row=0, column=0, columnspan=3, **pads_outer)
-        MyLabel(self.frame_prefs, 'label_fontsize', text='Queue fontsize:').grid(row=1, column=0, sticky=tk.W, **pads_inner)
-        MyButton(self.frame_prefs, 'button_increasefont', image=self.parent.images['icon_+'], width=15, height=15, command=self.increase_fontsize).grid(row=1, column=1, sticky=tk.W, **pads_inner)
-        MyButton(self.frame_prefs, 'button_decreasefont', image=self.parent.images['icon_-'], width=15, height=15, command=self.decrease_fontsize).grid(row=1, column=2, sticky=tk.W, **pads_inner)
-        MyLabel(self.frame_prefs, 'label_externalviewer', text='External viewer: ').grid(row=2, column=0, sticky=tk.W, **pads_inner)
-        MyCheckbutton(self.frame_prefs, text='', variable=self.parent.open_in_separate_window).grid(row=2, column=1, sticky=tk.W ,**pads_inner)
-        MyLabel(self.frame_prefs, 'label_backgroundcolor', text='Backg. color:').grid(row=3, column=0, sticky=tk.W, **pads_inner)
-        self.entry_background_color = MyEntry(self.frame_prefs, width=6)
+
+        self.frame_prefs.sub_fontsize = tk.Frame(self.frame_prefs)
+        self.frame_prefs.sub_fontsize.grid(row=1, column=0, sticky=tk.W)
+        MyLabel(self.frame_prefs.sub_fontsize, 'label_fontsize', text='Queue fontsize:').grid(row=0, column=0, sticky=tk.W, **pads_inner)
+        MyButton(self.frame_prefs.sub_fontsize, 'button_increasefont', image=self.parent.images['icon_+'], width=15, height=15, command=self.increase_fontsize).grid(row=0, column=1, sticky=tk.W, **pads_inner)
+        MyButton(self.frame_prefs.sub_fontsize, 'button_decreasefont', image=self.parent.images['icon_-'], width=15, height=15, command=self.decrease_fontsize).grid(row=0, column=2, sticky=tk.W, **pads_inner)
+
+        self.frame_prefs.external_viewer = tk.Frame(self.frame_prefs)
+        self.frame_prefs.external_viewer.grid(row=2, column=0, sticky=tk.W)
+        MyLabel(self.frame_prefs.external_viewer, 'label_externalviewer', text='Use external viewer: ').grid(row=2, column=0, sticky=tk.W, **pads_inner)
+        MyCheckbutton(self.frame_prefs.external_viewer, text='', variable=self.parent.open_in_separate_window).grid(row=2, column=1, sticky=tk.W ,**pads_inner)
+
+        self.frame_prefs.colors = tk.Frame(self.frame_prefs)
+        self.frame_prefs.colors.grid(row=3, column=0, sticky=tk.W)
+        MyLabel(self.frame_prefs.colors, 'label_backgroundcolor', text='Backg. color:').grid(row=3, column=0, sticky=tk.W, **pads_inner)
+        self.entry_background_color = MyEntry(self.frame_prefs.colors, width=8)
         self.entry_background_color.grid(row=3, column=1, sticky=tk.W, **pads_inner)
         self.entry_background_color.insert(tk.END, self.parent.background_color.get())
-        MyButton(self.frame_prefs, 'button_colorpicker_bg', image=self.parent.images['icon_colorpicker'], width=20, height=20, command=lambda: self.colorpicker(where='bg')).grid(row=3, column=2, **pads_inner)
+        MyButton(self.frame_prefs.colors, 'button_colorpicker_bg', image=self.parent.images['icon_colorpicker'], width=20, height=20, command=lambda: self.colorpicker(where='bg')).grid(row=3, column=2, **pads_inner)
 
-        MyLabel(self.frame_prefs, 'label_foregroundcolor', text='Foreg. color:').grid(row=4, column=0, sticky=tk.W, **pads_inner)
-        self.entry_foreground_color = MyEntry(self.frame_prefs, width=6)
+        MyLabel(self.frame_prefs.colors, 'label_foregroundcolor', text='Foreg. color:').grid(row=4, column=0, sticky=tk.W, **pads_inner)
+        self.entry_foreground_color = MyEntry(self.frame_prefs.colors, width=8)
         self.entry_foreground_color.grid(row=4, column=1, sticky=tk.W, **pads_inner)
         self.entry_foreground_color.insert(tk.END, self.parent.foreground_color.get())
-        MyButton(self.frame_prefs, 'button_colorpicker_fg', image=self.parent.images['icon_colorpicker'], width=20, height=20, command=lambda: self.colorpicker(where='fg')).grid(row=4, column=2, **pads_inner)
-        MyButton(self.frame_prefs, 'button_queue_editor', text='Edit queue', command=self.queue_editor).grid(row=5, column=0, sticky=tk.W, **pads_inner)
+        MyButton(self.frame_prefs.colors, 'button_colorpicker_fg', image=self.parent.images['icon_colorpicker'], width=20, height=20, command=lambda: self.colorpicker(where='fg')).grid(row=4, column=2, **pads_inner)
 
-        MyButton(self.frame_prefs, 'button_savepref', image=self.parent.images['icon_applysettings'], width=75, height=30, command=self.parent.dump_prefs).grid(row=99, column=0, sticky=tk.W, **pads_inner)
+        self.frame_prefs.sub_bottom = tk.Frame(self.frame_prefs)
+        self.frame_prefs.sub_bottom.grid(row=99, column=0, sticky=tk.W)
+        MyButton(self.frame_prefs.sub_bottom, 'button_queue_editor', image=self.parent.images['icon_edit_queue'], width=30, height=30, command=self.queue_editor).grid(row=0, column=0, sticky=tk.W, **pads_inner)
+        MyButton(self.frame_prefs.sub_bottom, 'button_savepref', image=self.parent.images['icon_applysettings'], width=30, height=30, command=self.parent.dump_prefs).grid(row=0, column=1, sticky=tk.W, **pads_inner)
 
         # Main queue Text widget
         self.qv = QueueViewer(self.frame_q)
@@ -209,6 +220,8 @@ class Home(tk.Frame):
                  width=30, height=30).grid(row=0, column=0, sticky=tk.W, **pads_outer)
         MyButton(self.frame_bottools, 'button_toolbox', image=self.parent.images['icon_toolbox'],
                  command=self.notimplemented, width=30, height=30, highlightcolor='black', highlightthickness=1).grid(row=0, column=1, sticky=tk.W, **pads_outer)
+        MyButton(self.frame_bottools, 'button_ssh', image=self.parent.images['icon_ssh'], width=30, height=30, command=lambda cluster=self.parent.cluster.get(): self.parent.window_login.authorize(cluster)).grid(row=0, column=2, **pads_outer)
+
         self.label_tooltip = MyLabel(self.frame_bottools, 'idle', text=f'ToolTip: {self.tooltip.get()}', bg='#1f4a46', fg='#ffffff')
         self.label_tooltip.grid(row=0, column=99, **pads_outer)
 
