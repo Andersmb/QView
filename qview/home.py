@@ -15,7 +15,7 @@ from helpers import from_val
 from exceptions import *
 
 # Define some constants
-CONST_HISTORY_LENGTH = 28  # How long back to look at job history
+CONST_HISTORY_LENGTH = 14  # How long back to look at job history
 CONST_MONITOR_IDLE_TIME = 0.5  # Frequency in sec of background monitoring
 
 
