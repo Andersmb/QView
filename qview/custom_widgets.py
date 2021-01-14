@@ -72,7 +72,7 @@ class MyCheckbutton(tk.Checkbutton):
 class MyEntry(tk.Entry):
     def __init__(self, parent, **kwargs):
         tk.Entry.__init__(self, parent, **kwargs)
-        self.configure(borderwidth=1, highlightthickness=0)
+        self.configure(borderwidth=1, highlightthickness=0, selectbackground='#7a0a4b')
 
 
 class AutoCompleteEntry(MyEntry):
@@ -159,7 +159,7 @@ class QueueViewer(tk.Text):
         self.parent = parent
         self.pid_var = pid_var
         self.create_tags()
-        self.configure(background='#000000', foreground='#ffffff', wrap=tk.NONE)
+        self.configure(background='#000000', foreground='#ffffff', selectbackground='#7a0a4b', wrap=tk.NONE)
 
         self.bind('<Motion>', self.on_motion)
         self.bind('<Button-1>', self.on_click)
