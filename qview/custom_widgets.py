@@ -248,5 +248,8 @@ class QueueViewer(tk.Text):
 
     def on_click(self, event):
         x, y = self.index(f'@{event.x},{event.y}').split('.')
-        pid = self.get(f'{x}.0', f'{x}.{tk.END}').split()[1]
-        self.pid_var.set(pid)
+        try:
+            pid = int(self.get(f'{x}.0', f'{x}.{tk.END}').split()[1])
+            self.pid_var.set(pid)
+        except (AttributeError, IndexError, ValueError):
+            pass

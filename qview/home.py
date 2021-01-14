@@ -43,6 +43,7 @@ class Home(tk.Frame):
         self.thread_ssh_alive = tk.BooleanVar()
         self.thread_job_alive = tk.BooleanVar()
         self.thread_sel_alive = tk.BooleanVar()
+        self.queue_visible = tk.BooleanVar()
 
         # Define the job history length and set default to today
         self.job_history = [dt.today().date() - timedelta(days=i) for i in range(CONST_HISTORY_LENGTH)]
@@ -248,6 +249,8 @@ class Home(tk.Frame):
         self.qv.bind('<Button-2>', self.popup)
 
     def popup(self, event):
+        if not self.queue_visible.get():
+            return
         x, y = self.qv.index(f'@{event.x},{event.y}').split('.')
         pid = self.qv.get(f'{x}.0', f'{x}.{tk.END}').split()[1]
         self.selected.set(pid)
@@ -406,6 +409,7 @@ class Home(tk.Frame):
         qhandler = Queue(self.ssh_client, user=self.quser.get(), filters={'state': state_key, 'partition': partition_key})
 
         self.qv.display_queue(qhandler, self.parent.queue_format.get().split())
+        self.queue_visible.set(True)
 
     def execute_remote(self, cmd):
         stdin, stdout, stderr = self.ssh_client.exec_command(cmd)
@@ -481,6 +485,7 @@ class Home(tk.Frame):
         else:
             try:
                 self.qv.display_file(qhandler, pid, ftype, skip_to_end=True if ftype == 'output' else False)
+                self.queue_visible.set(False)
             except FileNotFoundError as e:
                 tk.messagebox.showerror('Error', e)
 
