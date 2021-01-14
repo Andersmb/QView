@@ -27,7 +27,7 @@ class QView(tk.Tk):
     """
     def __init__(self):
         tk.Tk.__init__(self)
-        self.name = "QView_DEV" if DEV else "QView"
+        self.name = "QView [Dev]" if DEV else "QView"
         self.dir_root = Path(__file__).absolute().parent.parent
         self.dir_imag = self.dir_root.joinpath('images')
         self.file_tooltips = self.dir_root.joinpath('tooltips.json')
@@ -175,6 +175,6 @@ if __name__ == "__main__":
     app = QView()
     print(f"Welcome to {app.name}: New session started")
     app.title(app.name)
-    app.resizable(False"", False)
+    app.resizable(False, False)
     app.lift()
     app.mainloop()
