@@ -161,10 +161,8 @@ class Home(tk.Frame):
         MyLabel(self.frame_status, None, textvar=self.pending_jobs).grid(row=4, column=1, sticky=tk.W, **pads_inner)
         MyLabel(self.frame_status, 'label_jobworker', text='Job worker:').grid(row=5, column=0, sticky=tk.W, **pads_inner)
         MyLabel(self.frame_status, None, textvar=self.thread_job_alive).grid(row=5, column=1, sticky=tk.W, **pads_inner)
-        MyLabel(self.frame_status, 'label_selworker', text='SEL worker:').grid(row=6, column=0, sticky=tk.W, **pads_inner)
-        MyLabel(self.frame_status, None, textvar=self.thread_sel_alive).grid(row=6, column=1, sticky=tk.W, **pads_inner)
-        MyLabel(self.frame_status, 'label_timestamp', text='Last update:').grid(row=7, column=0, sticky=tk.W, **pads_inner)
-        MyLabel(self.frame_status, None, textvar=self.timestamp).grid(row=7, column=1, sticky=tk.W, **pads_inner)
+        MyLabel(self.frame_status, 'label_timestamp', text='Last update:').grid(row=6, column=0, sticky=tk.W, **pads_inner)
+        MyLabel(self.frame_status, None, textvar=self.timestamp).grid(row=6, column=1, sticky=tk.W, **pads_inner)
 
         MyLabel(self.frame_cluster, 'label_changecluster', text="CHANGE CLUSTER").grid(row=0, column=0, columnspan=2, **pads_outer)
 
