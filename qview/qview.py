@@ -175,6 +175,6 @@ if __name__ == "__main__":
     app = QView()
     print(f"Welcome to {app.name}: New session started")
     app.title(app.name)
-    app.resizable(False, False)
+    app.resizable(False"", False)
     app.lift()
     app.mainloop()

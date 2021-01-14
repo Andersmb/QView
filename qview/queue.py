@@ -2,6 +2,7 @@ import pandas as pd
 from collections import OrderedDict
 from pathlib import Path
 from exceptions import *
+import numpy as np
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
@@ -22,7 +23,7 @@ class Queue:
         self.filters = filters
         self.scratch = '/cluster/work/jobs'
 
-        self.field_width = 100
+        self.field_width = 200
         self.headers = sorted(['jobid', 'name', 'username', 'userid', 'state', 'timelimit', 'timeleft',
                         'timeused', 'stdin', 'stdout', 'stderr', 'workdir', 'starttime', 'submittime', 'nice', 'priority',
                         'qos', 'partition', 'minmemory', 'numnodes', 'numcpus', 'numtasks', 'mintime', 'nodelist',
@@ -53,8 +54,19 @@ class Queue:
 
             q.append(d)
 
-        queue = pd.DataFrame.from_dict(q).sort_values(by=['jobid']).reset_index()
-        return self.filter_queue(queue, self.filters)
+        # Convert timelimit to hours
+        queue = pd.DataFrame.from_dict(q).sort_values(by=['jobid'])
+
+        timelimits = list(queue.timelimit)
+        hours = []
+        for tl in timelimits:
+            d = self.parse_timelimit(tl)
+            h = d['days']*24 + d['hours'] + d['minutes'] / 60 + d['seconds'] / 3600
+            hours.append(h)
+        hours = np.asarray(hours)
+        cpus = np.asarray([int(el) for el in list(queue.numcpus)])
+        queue['cpuhours'] = hours * cpus
+        return self.filter_queue(queue.reset_index(), self.filters)
 
     def filter_queue(self, queue, filters):
         query = " & ".join([f'(@queue.{key} == "{val}")' for key, val in filters.items() if val != 'ALL'])
@@ -62,6 +74,20 @@ class Queue:
             return queue
         else:
             return queue.query(query)
+
+    def parse_timelimit(self, tl):
+        try:
+            days, rest = tl.split('-')
+        except ValueError:
+            days = 0
+            rest = tl
+        try:
+            hours, minutes, seconds = rest.split(':')
+        except ValueError:
+            hours, minutes, seconds = 0, 0, 0
+
+        return dict(days=int(days), hours=int(hours), minutes=int(minutes), seconds=int(seconds))
+            
 
     def get_job(self, queue, pid):
         job = queue.loc[queue.jobid == pid]

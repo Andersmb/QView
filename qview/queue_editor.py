@@ -21,7 +21,7 @@ class QueueEditor(tk.Toplevel):
              },
             {'id': 3,
              'name': 'For 1337z',
-             'headers': 'jobid name username timeleft timelimit numnodes numcpus partition submittime nodelist'}
+             'headers': 'jobid name username timeleft timelimit numnodes numcpus partition submittime nodelist cpuhours'}
         ]
 
         self.create_widgets()
@@ -75,6 +75,8 @@ class QueueEditor(tk.Toplevel):
         for i, header in enumerate(sorted(self.headers)):
             if header not in self.parent.parent.queue_format.get().split():
                 self.available_headers.insert(i, header)
+
+        self.available_headers.insert(0, 'cpuhours')
 
     def set_theme(self, headers):
         avails = [self.available_headers.get(i) for i in range(self.available_headers.size())]
