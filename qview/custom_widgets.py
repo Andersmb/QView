@@ -154,11 +154,18 @@ class AutoCompleteEntry(MyEntry):
 
 
 class QueueViewer(tk.Text):
-    def __init__(self, parent, **kwargs):
+    def __init__(self, parent, pid_var=None, **kwargs):
         tk.Text.__init__(self, parent, **kwargs)
         self.parent = parent
+        self.pid_var = pid_var
         self.create_tags()
         self.configure(background='#000000', foreground='#ffffff', wrap=tk.NONE)
+
+        self.bind('<Motion>', self.on_motion)
+        self.bind('<Button-1>', self.on_click)
+
+        self.linenumber = tk.IntVar()
+        self.linenumber.trace('w', self.on_trace)
 
     def display_queue(self, qhandler, headers):
         queue = qhandler.fetch()
@@ -204,6 +211,7 @@ class QueueViewer(tk.Text):
             self.tag_configure(status, background=color)
 
         self.tag_configure('matched', background='#ffb0ab', foreground='#000000')
+        self.tag_configure('active', background='#0e4536', foreground='#ffffff')
 
         self.tag_raise(tk.SEL)
 
@@ -226,3 +234,19 @@ class QueueViewer(tk.Text):
             self.mark_set('match_start', index)
             self.mark_set('match_end', f'{index}+{counter.get()}c')
             self.tag_add(tag, 'match_start', 'match_end')
+
+    def on_motion(self, event):
+        x, y = self.index(f'@{event.x},{event.y}').split('.')
+        self.linenumber.set(x)
+
+    def on_trace(self, var, index, mode):
+        buffer = range(1, 10, 1)
+        i = self.linenumber.get()
+        self.tag_add('active', f'{i}.0', f'{i}.{tk.END}')
+        [self.tag_remove('active', f'{i-b}.0', f'{i-b}.{tk.END}') for b in buffer]
+        [self.tag_remove('active', f'{i+b}.0', f'{i+b}.{tk.END}') for b in buffer]
+
+    def on_click(self, event):
+        x, y = self.index(f'@{event.x},{event.y}').split('.')
+        pid = self.get(f'{x}.0', f'{x}.{tk.END}').split()[1]
+        self.pid_var.set(pid)

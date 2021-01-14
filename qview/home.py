@@ -218,7 +218,7 @@ class Home(tk.Frame):
         MyButton(self.frame_prefs.sub_bottom, 'button_savepref', image=self.parent.images['icon_applysettings'], width=30, height=30, command=self.parent.dump_prefs).grid(row=0, column=2, sticky=tk.W, **pads_outer)
 
         # Main queue Text widget
-        self.qv = QueueViewer(self.frame_q)
+        self.qv = QueueViewer(self.frame_q, self.selected)
         self.qv.grid(row=0, column=0, sticky=tk.NSEW)
         self.qv.configure(font=self.parent.font_q)
 
