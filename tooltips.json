@@ -39,10 +39,16 @@
   "button_decreasefont": "Decrease font size",
   "button_savepref": "Save current settings to file, auto loads on next startup",
   "button_colorpicker": "Select background color (excluding queue window)",
-  "label_partition": "Filter by partition (not implemented)",
+  "label_partition": "Filter by partition",
   "button_queue_editor": "Modify which column headers to include in the queue",
   "button_ssh": "Reestablish SSH connection",
   "label_externalviewer": "Open files in an external viewer",
   "button_defaults": "Reset preferences to defaults",
-  "button_killjob": "Kill selected job. Ctrl-click for killing all jobs"
+  "button_killjob": "Kill selected job. Ctrl-click for killing all jobs",
+  "label_timestamp": "Time when output file was updated last",
+  "label_backgroundcolor": "Current background color",
+  "label_foregroundcolor": "Current foreground color",
+  "button_colorpicker_bg": "Change background color",
+  "button_colorpicker_fg": "Change foreground color",
+  "button_restore_defaults": "Restore default settings"
 }
