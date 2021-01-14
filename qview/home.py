@@ -4,6 +4,7 @@ from datetime import datetime as dt, timedelta
 from threading import Thread
 from tkinter import messagebox, colorchooser
 import re
+import pyperclip as ppc
 
 import paramiko as pmk
 from custom_widgets import MyButton, MyLabel, MyFrame, MyEntry, MyCheckbutton, MyOptionMenu, QueueViewer, AutoCompleteEntry
@@ -227,6 +228,43 @@ class Home(tk.Frame):
 
         self.label_tooltip = MyLabel(self.frame_bottools, 'idle', text=f'ToolTip: {self.tooltip.get()}', bg='#1f4a46', fg='#ffffff')
         self.label_tooltip.grid(row=0, column=99, **pads_outer)
+
+        # Pop-up menu when right clicking inside the queue window
+        self.popup_menu = tk.Menu(self.qv, tearoff=0)
+        self.popup_menu.add_command(label='Copy path to input file to clipboard', command=lambda: self.copy_to_clipboard('input'))
+        self.popup_menu.add_command(label='Copy path to output file to clipboard', command=lambda: self.copy_to_clipboard('output'))
+        self.popup_menu.add_command(label='Copy path to error file to clipboard', command=lambda: self.copy_to_clipboard('error'))
+        self.popup_menu.add_command(label='Copy path to job file to clipboard', command=lambda: self.copy_to_clipboard('job'))
+        self.qv.bind('<Button-2>', self.popup)
+
+    def popup(self, event):
+        x, y = self.qv.index(f'@{event.x},{event.y}').split('.')
+        pid = self.qv.get(f'{x}.0', f'{x}.{tk.END}').split()[1]
+        self.selected.set(pid)
+        try:
+            self.popup_menu.tk_popup(event.x_root, event.y_root, '')
+        finally:
+            self.popup_menu.grab_release()
+
+    def copy_to_clipboard(self, ftype):
+        qhandler = Queue(ssh_client=self.ssh_client, sftp_client=self.sftp_client, user=self.quser.get())
+        queue = qhandler.fetch()
+        if ftype == 'input':
+            f = queue[queue.jobid == self.selected.get()].inputfile.item()
+            print(f)
+            ppc.copy(str(f))
+        elif ftype == 'output':
+            f = queue[queue.jobid == self.selected.get()].outputfile.item()
+            print(f)
+            ppc.copy(str(f))
+        elif ftype == 'error':
+            f = queue[queue.jobid == self.selected.get()].stderr.item()
+            print(f)
+            ppc.copy(str(f))
+        elif ftype == 'job':
+            f = queue[queue.jobid == self.selected.get()].command.item()
+            print(f)
+            ppc.copy(str(f))
 
     def queue_editor(self):
         qhandler = Queue(ssh_client=self.ssh_client, sftp_client=self.sftp_client, user='all')
