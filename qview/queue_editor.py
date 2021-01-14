@@ -87,14 +87,14 @@ class QueueEditor(tk.Toplevel):
 
         self.update_avails()
 
-    def activate(self, event, index=None, header=None):
+    def activate(self, event=None, index=None, header=None):
         if index is None and header is None:
             index, header = self.get_selection(self.available_headers)
         self.available_headers.delete(index)
         self.active_headers.insert(0, header)
         self.active_headers.selection_set(0)
 
-    def deactivate(self, event, index=None, header=None):
+    def deactivate(self, event=None, index=None, header=None):
         if index is None and header is None:
             index, header = self.get_selection(self.active_headers)
         self.active_headers.delete(index)
