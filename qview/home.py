@@ -231,10 +231,20 @@ class Home(tk.Frame):
 
         # Pop-up menu when right clicking inside the queue window
         self.popup_menu = tk.Menu(self.qv, tearoff=0)
+        self.popup_menu.add_separator()
         self.popup_menu.add_command(label='Copy path to input file to clipboard', command=lambda: self.copy_to_clipboard('input'))
         self.popup_menu.add_command(label='Copy path to output file to clipboard', command=lambda: self.copy_to_clipboard('output'))
         self.popup_menu.add_command(label='Copy path to error file to clipboard', command=lambda: self.copy_to_clipboard('error'))
         self.popup_menu.add_command(label='Copy path to job file to clipboard', command=lambda: self.copy_to_clipboard('job'))
+        self.popup_menu.add_separator()
+        self.popup_menu.add_command(label='Kill job', command=self.kill_job)
+        self.popup_menu.add_command(label='Kill all jobs', command=lambda: self.kill_job(event=1))
+        self.popup_menu.add_separator()
+        self.popup_menu.add_command(label='Plot SCF convergence', command=self.notimplemented)
+        self.popup_menu.add_command(label='Plot geometry convergence', command=self.notimplemented)
+        self.popup_menu.add_command(label='Open output file with Avogadro', command=self.notimplemented)
+        self.popup_menu.add_separator()
+
         self.qv.bind('<Button-2>', self.popup)
 
     def popup(self, event):
@@ -320,7 +330,7 @@ class Home(tk.Frame):
         if not pid:
             return messagebox.showinfo(self.parent.name, 'No PID selected')
         if self.quser.get()!= self.parent.user.get():
-            return messagebox.showerror('You cannot kill another user\'s job.')
+            return messagebox.showerror('Error', 'You cannot kill another user\'s job.')
 
         if event is not None:
             if messagebox.askyesno('WARNING',
