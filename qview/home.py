@@ -65,11 +65,9 @@ class Home(tk.Frame):
 
         # Start threads for background monitoring
         self.thread_jobs = Thread(target=self.monitor_running_pending_jobs, daemon=True)
-        self.thread_selected = Thread(target=self.monitor_selected_text, daemon=True)
         self.thread_timestamp = Thread(target=self.monitor_output_last_update, daemon=True)
 
         self.thread_jobs.start()
-        self.thread_selected.start()
         self.thread_timestamp.start()
 
         # Bind events to Home
@@ -155,7 +153,7 @@ class Home(tk.Frame):
         MyLabel(self.frame_status, 'label_status', text="STATUS").grid(row=0, column=0, columnspan=2, **pads_outer)
         MyLabel(self.frame_status, 'label_hostname', text="Hostname:").grid(row=1, column=0, sticky=tk.W, **pads_inner)
         MyLabel(self.frame_status, None, textvar=self.monitor_hostname).grid(row=1, column=1, sticky=tk.W, **pads_inner)
-        MyLabel(self.frame_status, 'label_selected', text="Selected:").grid(row=2, column=0, sticky=tk.W, **pads_inner)
+        MyLabel(self.frame_status, 'label_selected', text="Selected PID:").grid(row=2, column=0, sticky=tk.W, **pads_inner)
         MyLabel(self.frame_status, None, textvar=self.selected).grid(row=2, column=1, sticky=tk.W, **pads_inner)
         MyLabel(self.frame_status, 'label_running', text="Running jobs:").grid(row=3, column=0, sticky=tk.W, **pads_inner)
         MyLabel(self.frame_status, None, textvar=self.running_jobs).grid(row=3, column=1, sticky=tk.W, **pads_inner)
@@ -383,15 +381,6 @@ class Home(tk.Frame):
             self.thread_job_alive.set(self.thread_jobs.is_alive())
             time.sleep(CONST_MONITOR_IDLE_TIME)
 
-    def monitor_selected_text(self):
-        while True:
-            s = self.select_text()
-            if s and s != self.selected.get():
-                self.selected.set(s)
-            self.thread_sel_alive.set(self.thread_selected.is_alive())
-            time.sleep(CONST_MONITOR_IDLE_TIME)
-            time.sleep(CONST_MONITOR_IDLE_TIME)
-
     def monitor_output_last_update(self):
         while True:
             pid = self.selected.get()
@@ -414,13 +403,6 @@ class Home(tk.Frame):
 
             self.timestamp.set(timestamp)
             time.sleep(CONST_MONITOR_IDLE_TIME*4)
-
-    def select_text(self):
-        try:
-            s = int(self.qv.get(tk.SEL_FIRST, tk.SEL_LAST))
-            return s
-        except:
-            return ''
 
     def quit(self):
         if messagebox.askyesno(self.parent.name, "Are you sure you want to quit?"):
