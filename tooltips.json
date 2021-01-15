@@ -50,5 +50,6 @@
   "label_foregroundcolor": "Current foreground color",
   "button_colorpicker_bg": "Change background color",
   "button_colorpicker_fg": "Change foreground color",
-  "button_restore_defaults": "Restore default settings"
+  "button_restore_defaults": "Restore default settings",
+  "button_tutorial": "Launch user's tutorial"
 }
