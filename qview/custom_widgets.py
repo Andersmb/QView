@@ -159,7 +159,7 @@ class QueueViewer(tk.Text):
         self.parent = parent
         self.pid_var = pid_var
         self.create_tags()
-        self.configure(background='#000000', foreground='#ffffff', selectbackground='#7a0a4b', wrap=tk.NONE)
+        self.configure(background='#000000', foreground='#ffffff', selectbackground='#7a0a4b', wrap=tk.NONE, cursor='dotbox')
 
         self.bind('<Motion>', self.on_motion)
         self.bind('<Button-1>', self.on_click)
