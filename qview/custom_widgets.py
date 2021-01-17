@@ -212,6 +212,7 @@ class QueueViewer(tk.Text):
 
         self.tag_configure('matched', background='#ffb0ab', foreground='#000000')
         self.tag_configure('active', background='#0e4536', foreground='#ffffff')
+        self.tag_configure('clicked', background='#002a6e')
 
         self.tag_raise(tk.SEL)
 
@@ -242,14 +243,16 @@ class QueueViewer(tk.Text):
     def on_trace(self, var, index, mode):
         buffer = range(1, 10, 1)
         i = self.linenumber.get()
+        self.tag_remove('active', '1.0', tk.END)
         self.tag_add('active', f'{i}.0', f'{i}.{tk.END}')
-        [self.tag_remove('active', f'{i-b}.0', f'{i-b}.{tk.END}') for b in buffer]
-        [self.tag_remove('active', f'{i+b}.0', f'{i+b}.{tk.END}') for b in buffer]
 
     def on_click(self, event):
         x, y = self.index(f'@{event.x},{event.y}').split('.')
         try:
             pid = int(self.get(f'{x}.0', f'{x}.{tk.END}').split()[1])
             self.pid_var.set(pid)
+
+            self.tag_remove('clicked', '1.0', tk.END)
+            self.tag_add('clicked', f'{x}.0', f'{x}.{tk.END}')
         except (AttributeError, IndexError, ValueError):
             pass
