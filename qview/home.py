@@ -11,6 +11,7 @@ from custom_widgets import MyButton, MyLabel, MyFrame, MyEntry, MyCheckbutton, M
 from external_viewer import ExternalViewer
 from queue import Queue
 from queue_editor import QueueEditor
+from tutorial import Tutorial
 from helpers import from_val
 from exceptions import *
 
@@ -123,7 +124,7 @@ class Home(tk.Frame):
         killbutton = MyButton(self.frame_toptools, 'button_killjob', image=self.parent.images['icon_killjob'], command=self.kill_job, width=30, height=30)
         killbutton.grid(row=3, column=2, **pads_inner)
         killbutton.bind('<Control-Button-1>', self.kill_job)
-
+        MyButton(self.frame_toptools, 'button_tutorial', image=self.parent.images['icon_tutorial'], width=30, height=30, command=self.launch_tutorial).grid(row=3, column=3, **pads_inner)
 
         MyLabel(self.frame_visualization, 'label_visualization', text="VISUALS").grid(row=0, column=0, pady=5, padx=5)
         MyButton(self.frame_visualization, 'button_scfconv', image=self.parent.images['icon_scfconv'], width=50, height=50, command=self.notimplemented).grid(row=1, column=0, **pads_inner)
@@ -211,9 +212,9 @@ class Home(tk.Frame):
 
         self.frame_prefs.sub_bottom = tk.Frame(self.frame_prefs)
         self.frame_prefs.sub_bottom.grid(row=99, column=0, sticky=tk.W)
-        MyButton(self.frame_prefs.sub_bottom, 'button_queue_editor', image=self.parent.images['icon_edit_queue'], width=30, height=30, command=self.queue_editor).grid(row=0, column=0, sticky=tk.W, **pads_outer)
+        MyButton(self.frame_prefs.sub_bottom, 'button_queue_editor', image=self.parent.images['icon_edit_queue'], width=30, height=30, command=self.queue_editor, cursor='pencil').grid(row=0, column=0, sticky=tk.W, **pads_outer)
         MyButton(self.frame_prefs.sub_bottom, 'button_restore_defaults', image=self.parent.images['icon_defaults'], width=30, height=30, command=self.parent.restore_defaults).grid(row=0, column=1, sticky=tk.W, **pads_outer)
-        MyButton(self.frame_prefs.sub_bottom, 'button_savepref', image=self.parent.images['icon_applysettings'], width=30, height=30, command=self.parent.dump_prefs).grid(row=0, column=2, sticky=tk.W, **pads_outer)
+        MyButton(self.frame_prefs.sub_bottom, 'button_savepref', image=self.parent.images['icon_applysettings'], width=30, height=30, command=self.parent.dump_prefs, cursor='heart').grid(row=0, column=2, sticky=tk.W, **pads_outer)
 
         # Main queue Text widget
         self.qv = QueueViewer(self.frame_q, self.selected)
@@ -222,7 +223,7 @@ class Home(tk.Frame):
 
         # Bottom tools
         MyButton(self.frame_bottools, 'button_quit', image=self.parent.images['icon_skull'], command=self.quit,
-                 width=30, height=30).grid(row=0, column=0, sticky=tk.W, **pads_outer)
+                 width=30, height=30, cursor='pirate').grid(row=0, column=0, sticky=tk.W, **pads_outer)
         MyButton(self.frame_bottools, 'button_toolbox', image=self.parent.images['icon_toolbox'],
                  command=self.notimplemented, width=30, height=30, highlightcolor='black', highlightthickness=1).grid(row=0, column=1, sticky=tk.W, **pads_outer)
         MyButton(self.frame_bottools, 'button_ssh', image=self.parent.images['icon_ssh'], width=30, height=30, command=lambda cluster=self.parent.cluster.get(): self.parent.window_login.authorize(cluster)).grid(row=0, column=2, **pads_outer)
@@ -419,7 +420,11 @@ class Home(tk.Frame):
 
     def monitor_running_pending_jobs(self):
         while True:
-            qhandler = Queue(ssh_client=self.ssh_client, sftp_client=self.sftp_client, user=self.parent.user.get())
+            try:
+                qhandler = Queue(ssh_client=self.ssh_client, sftp_client=self.sftp_client, user=self.parent.user.get())
+            except pmk.ssh_exception.SSHException:
+                self.parent.login_window.authorize(self.parent.cluster.get())
+                print('Reconnect to SSH')
             q = qhandler.fetch()
             if q.empty:
                 return 0, 0
@@ -508,3 +513,6 @@ class Home(tk.Frame):
         self.parent.bind('<Control-minus>', lambda event: self.decrease_fontsize())
         self.entry_username.bind('<Return>', self.print_q)
         self.entry_background_color.bind('<Return>', self.set_color)
+
+    def launch_tutorial(self):
+        return Tutorial(self)
