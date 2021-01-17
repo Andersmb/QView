@@ -422,12 +422,12 @@ class Home(tk.Frame):
         while True:
             try:
                 qhandler = Queue(ssh_client=self.ssh_client, sftp_client=self.sftp_client, user=self.parent.user.get())
+                q = qhandler.fetch()
+                if q.empty:
+                    return 0, 0
             except pmk.ssh_exception.SSHException:
                 self.parent.login_window.authorize(self.parent.cluster.get())
                 print('Reconnect to SSH')
-            q = qhandler.fetch()
-            if q.empty:
-                return 0, 0
 
             nrun = len(q.loc[q.state == 'RUNNING'].index)
             npen = len(q.loc[q.state == 'PENDING'].index)
