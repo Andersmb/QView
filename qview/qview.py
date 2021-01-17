@@ -106,7 +106,8 @@ class QView(tk.Tk):
                        'icon_ssh': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_ssh.png'))),
                        'icon_edit_queue': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_edit_queue.png'))),
                        'icon_defaults': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_defaults.png'))),
-                       'icon_killjob': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_killjob.png')))}
+                       'icon_killjob': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_killjob.png'))),
+                       'icon_tutorial': ImageTk.PhotoImage(Image.open(self.dir_imag.joinpath('icon_tutorial.png')))}
 
         # Load file containing tooltip messages
         self.tooltips = self.load_tooltips()
